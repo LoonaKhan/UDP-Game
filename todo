@@ -4,9 +4,9 @@ go server for all the requests
 
 change to udp?
 
-cpp socket refine
+cpp use zmq for a client
 
 cpp game in sdl(sfml for now?)
 
 
-actual chunk rendering and mesh system
+actual chunk rendering and mesh system?
