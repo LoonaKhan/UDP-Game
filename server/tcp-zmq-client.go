@@ -1,5 +1,7 @@
 package main
 
+// tcp zmq client
+
 import (
 	"fmt"
 

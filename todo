@@ -1,10 +1,10 @@
 another attempt at minecraft
 
 go server for all the requests
-
-change to udp?
+    multiple url handles??
 
 cpp use zmq for a client
+    in udp
 
 cpp game in sdl(sfml for now?)
 

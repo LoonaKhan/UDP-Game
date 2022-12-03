@@ -6,6 +6,8 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
+// tcp zmq server
+
 /*
 func decodeJSON[T any](str string) (T, error) {
   d := json.NewDecoder(str)
@@ -22,8 +24,16 @@ func main() {
 	// using that context create a NewSocket
 	// Bind that
 
-	ctx, _ := zmq.NewContext()
-	sock, _ := ctx.NewSocket(zmq.REP)
+	ctx, err := zmq.NewContext()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	sock, err := ctx.NewSocket(zmq.REP)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	//defer ctx.Close()
 	defer sock.Close()
