@@ -24,7 +24,7 @@ func main() {
 	_, err = c.Write([]byte("{\"name\": \"loona\", \"age\": 20}"))
 
 	// read response
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 8192)
 	_, _, err = c.ReadFromUDP(buffer)
 
 	fmt.Println(string(buffer))

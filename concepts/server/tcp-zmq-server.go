@@ -9,11 +9,12 @@ import (
 // tcp zmq server
 
 /*
-func decodeJSON[T any](str string) (T, error) {
-  d := json.NewDecoder(str)
-  var data T
-  return data, d.Decode(&data)
-}*/
+	func decodeJSON[T any](str string) (T, error) {
+	  d := json.NewDecoder(str)
+	  var data T
+	  return data, d.Decode(&data)
+	}
+*/
 type basic struct {
 	Name string `json:"name"`
 	Age  int    `json:"age"`

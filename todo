@@ -24,6 +24,9 @@ go server for all the requests
       updates those player coords
       sends what chunks should be loaded
 
+     todo:
+        game server updates position
+
 cpp use zmq for a client
     in udp
 
