@@ -1,3 +1,3 @@
-client/client
-server/go.sum
+concepts/client/client
+concepts/server/go.sum
 .idea

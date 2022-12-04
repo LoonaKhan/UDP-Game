@@ -1,7 +1,28 @@
 another attempt at minecraft
 
 go server for all the requests
-    multiple url handles??
+    sessions: // maybe its own seperate database?
+      id -> session id
+      expiry -> datetime. goroutine checks if its expired
+      user -> user in db. pointer to db instance
+
+    cookies to manage sessions and whether someone is connected?
+      seperate go routine to manage each session
+      accepts a request and does the chunks
+      resets a timer
+      if no request when timer runs out, disconnect // use defer to wait a few seconds before killing and removing the sess
+      kill goroutine
+
+    rest api to
+      make players
+      get players
+      manage sessons
+        pass in user name, gets user id and then creates the session and returns the id
+
+    udp server:
+      send in player coords
+      updates those player coords
+      sends what chunks should be loaded
 
 cpp use zmq for a client
     in udp
