@@ -21,7 +21,7 @@ func main() {
 	defer c.Close()
 
 	// send
-	_, err = c.Write([]byte("{\"name\": \"loona\", \"age\": 20}"))
+	_, err = c.Write([]byte("default:" + "{\"name\": \"loona\", \"age\": 20}"))
 
 	// read response
 	buffer := make([]byte, 8192)

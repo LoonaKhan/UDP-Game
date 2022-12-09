@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"server/config"
 	"server/error_handling"
-	"server/models/chunks"
+	"server/routes"
 	"server/sessions"
+	"strings"
 	"time"
 )
 
@@ -18,18 +18,26 @@ based on that position, determine which chunks to load
 */
 
 type PlayerCoords struct { // recieved
-	SessToken string `json_utils:"sess_token"`
-	Coords    []int  `json_utils:"coords"`
+	SessToken string `json:"sess_token"`
+	Coords    []int  `json:"coords"`
 }
 
 type ChunkCoords struct { // sent back
-	SessToken   string  `json_utils:"sess_token"`
-	ChunkCoords [][]int `json_utils:"chunk_coords"`
+	SessToken   string  `json:"sess_token"`
+	ChunkCoords [][]int `json:"chunk_coords"`
+}
+
+func parseHeader(buffer []byte) (method []byte, idx int) {
+	idx = strings.Index(string(buffer), ":") + 1 // dont use a colon as that is used in json.
+	method = buffer[:idx]
+	fmt.Printf(string(method))
+	return method, idx
 }
 
 func main() {
 
 	// a goroutine to keep track of all sessions and delete any
+	// todo: this might not be needed and is stupid
 	go func() {
 		for {
 			for sess := range sessions.Sessions {
@@ -46,34 +54,18 @@ func main() {
 	// connection
 	s, err := net.ResolveUDPAddr("udp4", PORT)
 	conn, err := net.ListenUDP("udp4", s)
-	error_handling.HandleErr(err)
+	error_handling.Handle(err)
 	defer conn.Close()
 
 	buffer := make([]byte, 1024)
 	for { // runs the server indefinitely
 		n, addr, err := conn.ReadFromUDP(buffer)
-		error_handling.HandleErr(err)
+		error_handling.Handle(err)
 
-		go func(buffer []byte) {
+		method, idx := parseHeader(buffer) // parses the header to find the method
 
-			// get the data
-			var req PlayerCoords
-			err := json.Unmarshal(buffer[:n], &req)
-			error_handling.HandleErr(err)
-
-			// handle it
-			chunkCoords := chunks.ChunksInRenderDist(chunks.ToChunkCoords(req.Coords))
-			res_data := ChunkCoords{
-				SessToken:   req.SessToken,
-				ChunkCoords: chunkCoords,
-			}
-
-			// responds
-			res, err := json.Marshal(res_data)
-			error_handling.HandleErr(err)
-			_, _ = conn.WriteToUDP(res, addr)
-
-		}(buffer)
+		go routes.Methods[string(method)](buffer[idx:n], conn, addr) // can crash if given the wrong input
+		// try a wrapper function to try and access the map with the given key, returns an error
 
 	}
 
