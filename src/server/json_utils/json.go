@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"server/error_handling"
+	"server/err_handling"
 )
 
 func ReadJsonFile[T any](path string) T {
 	file, err := os.Open(path)
-	error_handling.Handle(err)
+	err_handling.Handle(err)
 
 	defer file.Close()
 
@@ -17,7 +17,7 @@ func ReadJsonFile[T any](path string) T {
 	bytes, err := io.ReadAll(file)
 
 	err = json.Unmarshal(bytes, &data)
-	error_handling.Handle(err)
+	err_handling.Handle(err)
 
 	return data
 }

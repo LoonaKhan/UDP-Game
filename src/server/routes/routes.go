@@ -3,32 +3,51 @@ package routes
 import (
 	"encoding/json"
 	"net"
-	"server/error_handling"
+	"server/err_handling"
 	"server/models/chunks"
 )
 
-type PlayerCoords struct { // recieved
-	SessToken string `json:"sess_token"`
-	Coords    []int  `json:"coords"`
-}
-
-type ChunkCoords struct { // sent back
-	SessToken   string  `json:"sess_token"`
-	ChunkCoords [][]int `json:"chunk_coords"`
+func CallMethod(method []byte, buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+	Methods[string(method)](buffer, conn, addr)
 }
 
 var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr){
-	"get_chunks:":         func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
-	"post_chunks:":        func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
-	"get_chunk_updates:":  func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
+	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
+
+	"post_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+		/*
+			when a player posts chunk updates,
+			  update
+			  also send those updates to all clients currently connected
+			  via handshakes
+				so no get chunks method
+		*/
+	},
+
+	"get_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+		// client sends all loaded chunks
+		// server checks for differences and sends back the differences
+		// will be very inefficient.
+		// instead, the server does this when another player updates
+	},
+
 	"post_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
-	"update_pos:":         func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
-	"get_players:":        func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
+
+	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+		// accepts a position formatted as an array
+		// updates it on the server
+	},
+
+	"get_players:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+		// server queries all players connected and sends them back
+	},
+
 	"default:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
 		// get the data
 		var req PlayerCoords
 		err := json.Unmarshal(buffer, &req)
-		error_handling.Handle(err)
+		defer err_handling.Recover("Invalid request data")
+		err_handling.Handle(err)
 
 		// handle it
 		chunkCoords := chunks.ChunksInRenderDist(chunks.ToChunkCoords(req.Coords))
@@ -39,7 +58,8 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		// responds
 		res, err := json.Marshal(res_data)
-		error_handling.Handle(err)
-		_, _ = conn.WriteToUDP(res, addr)
+		defer err_handling.Recover("Unable to marshal json data")
+		err_handling.Handle(err)
+		conn.WriteToUDP(res, addr)
 	},
 }
