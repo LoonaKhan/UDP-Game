@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"net"
-	"server/config"
+	"server/conf"
+	"server/db"
 	"server/err_handling"
 	"server/routes"
 	"strings"
@@ -15,16 +16,6 @@ intakes a user's position
 based on that position, determine which chunks to load
 */
 
-type PlayerCoords struct { // recieved
-	SessToken string `json:"sess_token"`
-	Coords    []int  `json:"coords"`
-}
-
-type ChunkCoords struct { // sent back
-	SessToken   string  `json:"sess_token"`
-	ChunkCoords [][]int `json:"chunk_coords"`
-}
-
 func parseHeader(buffer []byte) (method []byte, idx int) {
 	idx = strings.Index(string(buffer), ":") + 1 // dont use a colon as that is used in json.
 	method = buffer[:idx]
@@ -34,22 +25,12 @@ func parseHeader(buffer []byte) (method []byte, idx int) {
 
 func main() {
 
-	// a goroutine to keep track of all sessions and delete any
-	// todo: this might not be needed and is stupid
-	/*
-		go func() {
-				for {
-					for sess := range sessions.Sessions {
-						if sessions.Sessions[sess].ExpiresAt.Before(time.Now()) { // if the session has expired, delete
-							sessions.Delete(sess)
-						}
-					}
-				}
-			}()
-	*/
+	// we connect to the db and handle its error if any
+	err_handling.Handle(db.Conn_err)
+	//err_handling.Handle(db.Conn.AutoMigrate(&players.Player{}, &chunks.Chunk{}, &blocks.Block{})) // i dont get this still
 
 	// sets up the port
-	PORT := fmt.Sprintf(":%d", config.PORT)
+	PORT := fmt.Sprintf(":%d", conf.PORT)
 
 	// connection
 	s, err := net.ResolveUDPAddr("udp4", PORT)

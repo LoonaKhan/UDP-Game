@@ -2,4 +2,4 @@ concepts/client/client
 concepts/server/go.sum
 .idea
 *~
-src/*.sqlite*
+*.sqlite*

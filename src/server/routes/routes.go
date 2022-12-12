@@ -3,13 +3,9 @@ package routes
 import (
 	"encoding/json"
 	"net"
+	"server/db/models/chunks"
 	"server/err_handling"
-	"server/models/chunks"
 )
-
-func CallMethod(method []byte, buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
-	Methods[string(method)](buffer, conn, addr)
-}
 
 var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr){
 	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},

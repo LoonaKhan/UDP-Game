@@ -17,7 +17,7 @@ var Sessions map[string]Session // map of all our sessions
 type Session struct {
 	Id        string    // Id of the session
 	ExpiresAt time.Time // time the session will expire
-	Uid       int       // Id of a user in the database
+	Uid       int       // Id of a user in the db
 }
 
 func Init(given_uid int) {

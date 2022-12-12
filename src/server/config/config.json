@@ -1,5 +1,0 @@
-{
-  "PORT": 4000,
-  "CHUNK_SIZE": 16,
-  "RENDER_DISTANCE": 16
-}
