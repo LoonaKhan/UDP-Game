@@ -5,6 +5,9 @@ import (
 	"net"
 	"server/conf"
 	"server/db"
+	"server/db/models/blocks"
+	"server/db/models/chunks"
+	"server/db/models/players"
 	"server/err_handling"
 	"server/routes"
 	"strings"
@@ -27,7 +30,9 @@ func main() {
 
 	// we connect to the db and handle its error if any
 	err_handling.Handle(db.Conn_err)
-	//err_handling.Handle(db.Conn.AutoMigrate(&players.Player{}, &chunks.Chunk{}, &blocks.Block{})) // i dont get this still
+	err_handling.Handle(db.Conn.AutoMigrate(&players.Player{})) // i dont get this still
+	err_handling.Handle(db.Conn.AutoMigrate(&chunks.Chunk{}))
+	err_handling.Handle(db.Conn.AutoMigrate(&blocks.Block{}))
 
 	// sets up the port
 	PORT := fmt.Sprintf(":%d", conf.PORT)

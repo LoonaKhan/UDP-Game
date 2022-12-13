@@ -1,10 +1,17 @@
 package chunks
 
-import "server/conf"
+import (
+	"gorm.io/gorm"
+	"server/conf"
+	"server/db/models/blocks"
+)
 
 type Chunk struct {
-	X int
-	Y int
+	gorm.Model
+
+	X      int
+	Y      int
+	Blocks []blocks.Block
 }
 
 func ToChunkCoords(pos []int) []int { // converts block coordinates to chunk coordinates

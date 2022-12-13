@@ -1,13 +1,17 @@
 package blocks
 
-import "server/db/models/chunks"
+import (
+	"gorm.io/gorm"
+)
 
 type Block struct {
+	gorm.Model
+
 	// these coords are relative to their block
 	X int
 	Y int
 
-	Chunk *chunks.Chunk // the chunk they belong to
+	ChunkID uint // the chunk they belong to
 
 	// determined by perlin noise on the client
 	Colour int
