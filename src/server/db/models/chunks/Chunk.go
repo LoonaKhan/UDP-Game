@@ -9,9 +9,9 @@ import (
 type Chunk struct {
 	gorm.Model
 
-	X      int
-	Y      int
-	Blocks []blocks.Block
+	X      int            `json:"x"`
+	Y      int            `json:"y"`
+	Blocks []blocks.Block `json:"blocks"`
 }
 
 func ToChunkCoords(pos []int) []int { // converts block coordinates to chunk coordinates

@@ -5,8 +5,8 @@ import "gorm.io/gorm"
 type Player struct {
 	gorm.Model
 
-	name   string
-	X      int
-	Y      int
-	online bool
+	Name   string `json:"name"`
+	X      int    `json:"x"`
+	Y      int    `json:"y"`
+	Online bool   `json:"online"`
 }

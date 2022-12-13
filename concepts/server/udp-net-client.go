@@ -7,6 +7,12 @@ import (
 
 // udp client
 
+var calls = map[string]string{
+	"get_players:": "get_players:",
+	"post_player:": "post_player:" + "{\"name\": \"loona\", \"X\": 20, \"Y\": 5, \"ID\": 3}",
+	"update_pos:":  "update_pos:" + "{\"coords\": [10,10], \"id\": 3}",
+}
+
 func main() {
 	CONN := "localhost:4000"
 
@@ -21,7 +27,7 @@ func main() {
 	defer c.Close()
 
 	// send
-	_, err = c.Write([]byte("default:" + "{\"name\": \"loona\", \"age\": 20}"))
+	_, err = c.Write([]byte(calls["get_players:"]))
 
 	// read response
 	buffer := make([]byte, 8192)
