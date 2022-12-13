@@ -25,3 +25,9 @@ cpp game in sdl(sfml for now?)
 
 
 actual chunk rendering and mesh system?
+
+
+
+
+
+note: on the client side, the player continuously moves and does stuff, meanwhile, it updates the server on another thread and corrects the player if its position is inaccurate

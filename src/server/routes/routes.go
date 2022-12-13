@@ -37,6 +37,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 	"post_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
 
 	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+		// todo: Does not allow the player to move faster than the max speed. if they do, only move them by max speed
 		// accepts a position formatted as an array
 		// updates it on the server
 
