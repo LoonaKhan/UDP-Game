@@ -26,13 +26,23 @@ func main() {
 	fmt.Printf("Connected to server: %s\n", c.RemoteAddr().String())
 	defer c.Close()
 
-	// send
-	_, err = c.Write([]byte(calls["get_players:"]))
+	for {
 
-	// read response
-	buffer := make([]byte, 8192)
-	_, _, err = c.ReadFromUDP(buffer)
+		var call string
+		fmt.Println("Enter which method to call:")
+		fmt.Scan(&call)
+		if call == "exit" {
+			break
+		}
 
-	fmt.Println(string(buffer))
+		// send
+		_, err = c.Write([]byte(calls[call]))
+
+		// read response
+		buffer := make([]byte, 8192)
+		_, _, err = c.ReadFromUDP(buffer)
+
+		fmt.Println(string(buffer))
+	}
 
 }
