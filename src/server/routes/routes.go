@@ -15,7 +15,37 @@ import (
 //		clients are given sess id's that let them modify specific players. what about logging in?
 
 var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr){
-	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
+	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+		/*
+			User submits their coordinates,
+			server sends back all existing chunks as well as the top-left and bottom-right coords of the chunk span
+		*/
+
+		// accepts the user data
+		var coords PlayerCoords
+		err := json.Unmarshal(buffer, &coords)
+		defer err_handling.Recover("Invalid request data")
+		err_handling.Handle(err)
+
+		// uses coords to find the chunk span to render
+		curChunk := chunks.ToChunkCoords(coords.Coords)
+		TL, BR, xspan, yspan := chunks.ChunkSpan(curChunk)
+
+		// gets all chunks in the chunk span that already exist
+		var chunks []chunks.Chunk
+		db.Conn.Find(&chunks, "x IN ? AND y IN ?", xspan, yspan)
+
+		// return the chunk span as well as the existing chunks
+		span := ChunkSpan{
+			Chunks: chunks,
+			TL:     TL,
+			BR:     BR,
+		}
+		res, err := json.Marshal(span)
+		defer err_handling.Recover("Unable to marshal chunk span data")
+		err_handling.Handle(err)
+		conn.WriteToUDP(res, addr)
+	},
 
 	"post_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
 		/*
@@ -25,6 +55,26 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			  via handshakes
 				so no get chunks method
 		*/
+
+		// accepts user data
+		var span ChunkSpan
+		err := json.Unmarshal(buffer, &span)
+		defer err_handling.Recover("Invalid request data")
+		err_handling.Handle(err)
+
+		// adds all chunks into the database
+		for c := range span.Chunks {
+			db.Conn.Create(&span.Chunks[c])
+		}
+
+		// responds
+		res_data := map[string]string{
+			"msg": "Recieved",
+		}
+		res, err := json.Marshal(res_data)
+		defer err_handling.Recover("Unable to marshal response data")
+		err_handling.Handle(err)
+		conn.WriteToUDP(res, addr)
 	},
 
 	"get_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
@@ -89,7 +139,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// we dont require any relevant data. so dont check
 
 		var players []players.Player
-		db.Conn.Find(&players)
+		db.Conn.Find(&players, "online = ?", true)
 
 		var plist = ListPlayers{Players: players}
 		res, err := json.Marshal(plist)
