@@ -12,6 +12,7 @@ var calls = map[string]string{
 	"post_player:": "post_player:" + "{\"name\": \"loona\", \"X\": 20, \"Y\": 5, \"ID\": 3}",
 	"update_pos:":  "update_pos:" + "{\"coords\": [10,10], \"id\": 3}",
 	"get_chunks:":  "get_chunks:" + "{\"coords\":[0,0]}",
+	"post_chunks:": "post_chunks:" + "{\"chunks\": [{\"x\": 0, \"y\": 0}, {\"x\": 20, \"y\":20}]}",
 }
 
 func main() {
