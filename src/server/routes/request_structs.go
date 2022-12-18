@@ -28,3 +28,8 @@ type ChunkSpan struct { // span of chunks either sent or recieved
 	TL     [2]int         `json:"top-left"`
 	BR     [2]int         `json:"bottom-right"`
 }
+
+type Response struct {
+	Msg string `json:"msg"`
+	Err string `json:"err"`
+}

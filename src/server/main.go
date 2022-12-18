@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"server/addys"
 	"server/conf"
 	"server/db"
 	"server/db/models/blocks"
@@ -30,7 +31,7 @@ func main() {
 
 	// we connect to the db and handle its error if any
 	err_handling.Handle(db.Conn_err)
-	err_handling.Handle(db.Conn.AutoMigrate(&players.Player{})) // i dont get this still
+	err_handling.Handle(db.Conn.AutoMigrate(&players.Player{}))
 	err_handling.Handle(db.Conn.AutoMigrate(&chunks.Chunk{}))
 	err_handling.Handle(db.Conn.AutoMigrate(&blocks.Block{}))
 
@@ -43,6 +44,9 @@ func main() {
 	defer conn.Close()
 	err_handling.Handle(err)
 	fmt.Printf("Listening on Port: %s\n", PORT)
+
+	go addys.DialWorker(&addys.Addys) // worker checks all addresses continuously
+	// todo: doesnt delete players
 
 	buffer := make([]byte, 1024)
 	for { // runs the server indefinitely

@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net"
+	"server/addys"
 	"server/db"
 	"server/db/models/chunks"
 	"server/db/models/players"
@@ -24,7 +25,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// accepts the user data
 		var coords PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
-		defer err_handling.Recover("Invalid request data")
+		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
 
 		// uses coords to find the chunk span to render
@@ -41,9 +42,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			TL:     TL,
 			BR:     BR,
 		}
-		res, err := json.Marshal(span)
-		defer err_handling.Recover("Unable to marshal chunk span data")
-		err_handling.Handle(err)
+		res, _ := json.Marshal(span)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -59,7 +58,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// accepts user data
 		var span ChunkSpan
 		err := json.Unmarshal(buffer, &span)
-		defer err_handling.Recover("Invalid request data")
+		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
 
 		// adds all chunks into the database
@@ -71,9 +70,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		res_data := map[string]string{
 			"msg": "Recieved",
 		}
-		res, err := json.Marshal(res_data)
-		defer err_handling.Recover("Unable to marshal response data")
-		err_handling.Handle(err)
+		res, _ := json.Marshal(res_data)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -93,10 +90,10 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		var coords PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
-		defer err_handling.Recover("Invalid request data")
+		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
 
-		defer err_handling.Recover("Unable to update position")
+		defer err_handling.UDPRespond("Unable to update position", conn, addr)
 		err_handling.Handle(db.Conn.Model(&players.Player{}).
 			Where("id = ?", coords.ID).
 			Updates(players.Player{X: coords.Coords[0], Y: coords.Coords[1]}).Error)
@@ -104,10 +101,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		res_data := map[string]string{
 			"msg": "Updated",
 		}
-		res, err := json.Marshal(res_data)
-		defer err_handling.Recover("Unable to marshal response")
-		err_handling.Handle(err)
-
+		res, _ := json.Marshal(res_data)
 		conn.WriteToUDP(res, addr)
 
 	},
@@ -117,20 +111,16 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// 		maybe make a barebones player type they have to use and gets converted to regular player?
 		var p players.Player
 		err := json.Unmarshal(buffer, &p)
-		defer err_handling.Recover("Invalid request data")
+		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
 
-		p.Online = true // not a required field so we set it.
-
-		defer err_handling.Recover("Unable to create player")
+		defer err_handling.UDPRespond("Unable to create player", conn, addr)
 		err_handling.Handle(db.Conn.Create(&p).Error)
 
 		res_data := map[string]string{
 			"msg": "Created",
 		}
-		res, err := json.Marshal(res_data)
-		defer err_handling.Recover("Unable to marshall response")
-		err_handling.Handle(err)
+		res, _ := json.Marshal(res_data)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -139,14 +129,38 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// we dont require any relevant data. so dont check
 
 		var players []players.Player
-		db.Conn.Find(&players, "online = ?", true)
+		addys.AllOnline(&players)
 
 		var plist = ListPlayers{Players: players}
-		res, err := json.Marshal(plist)
-		defer err_handling.Recover("Unable to marshal players data")
-		err_handling.Handle(err)
+		res, _ := json.Marshal(plist)
 		conn.WriteToUDP(res, addr)
 
+	},
+	"login:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) { // todo: complete
+		// client sends in player login credentials along with their request
+		// server finds a player in the database with that info
+		var req map[string]string
+		err := json.Unmarshal(buffer, &req)
+		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		err_handling.Handle(err)
+
+		var plr players.Player
+		db.Conn.First(&plr, "name = ?", req["name"])
+
+		// checks if the player is mapped to any addy already
+		// if so, deny the request
+		// if not, check if that address is mapped to any player
+		if addys.PlayerExists(plr) {
+			res, _ := json.Marshal(Response{Err: "Login refused. Specified player is logged in already"})
+			conn.WriteToUDP(res, addr)
+			return
+		}
+
+		// if the player and addy each are not mapped
+		// map em together
+		addys.Insert(plr, addr)
+		res, _ := json.Marshal(Response{Msg: "Logged in."})
+		conn.WriteToUDP(res, addr)
 	},
 
 	"default:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
@@ -158,7 +172,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// get the data
 		var req PlayerCoords
 		err := json.Unmarshal(buffer, &req)
-		defer err_handling.Recover("Invalid request data")
+		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
 
 		// returns chunks
@@ -169,9 +183,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		}
 
 		// responds
-		res, err := json.Marshal(res_data)
-		defer err_handling.Recover("Unable to marshal chunk coord data")
-		err_handling.Handle(err)
+		res, _ := json.Marshal(res_data)
 		conn.WriteToUDP(res, addr)
 	},
 }
