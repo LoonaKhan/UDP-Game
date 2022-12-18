@@ -1,6 +1,9 @@
 package err_handling
 
-import "fmt"
+import (
+	"fmt"
+	"net"
+)
 
 func Handle(err error) { // panics. standalone good for fatal errors
 	if err != nil {
@@ -15,5 +18,12 @@ func Handle(err error) { // panics. standalone good for fatal errors
 func Recover(msg string) { // if the error is not fatal, do this. // todo: just dont handle the error if it isnt fatal?
 	if r := recover(); r != nil {
 		fmt.Printf("Recovered: %s", msg)
+	}
+}
+
+// another response function which is like recover, but it Writes to UDP the argument u send it
+func UDPRespond(msg string, conn *net.UDPConn, addr *net.UDPAddr) { // recovers a thread and sends a response to the client
+	if r := recover(); r != nil {
+		conn.WriteToUDP([]byte(msg), addr)
 	}
 }
