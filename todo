@@ -6,11 +6,15 @@ go server for all the requests
     including/verifying noise on server end?
     every request(that moves plr or updates world) does idle checks
         kiks idle plyers. resets a countdown of about 10 mins
+    security/optimizations
+        tick system(TPS)?
 
 
 cpp client
     test client
         udp with zmq?
+        send additional string bytes in a request
+        requests every tick instead of frame
     routes and communications with the server
     perlin noise testing
     multithreading review

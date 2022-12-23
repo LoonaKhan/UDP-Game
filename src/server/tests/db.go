@@ -18,20 +18,18 @@ func main() {
 	err_handling.Handle(db.Conn.AutoMigrate(&c.Chunk{}))
 	err_handling.Handle(db.Conn.AutoMigrate(&b.Block{}))
 
-	// operations
-	// create and manage chunks
-	db.Conn.Create(&c.Chunk{X: 1, Y: 2})
-	db.Conn.Create(&c.Chunk{X: 1, Y: 20})
+	db.Conn.Create(&p.Player{Name: "loona"})
 
-	var coords = []int{0, 0}
-	TL, BR, xspan, yspan := c.ChunkSpan(coords)
-	fmt.Println("\nTL:", TL, "\nBR:", BR, "\nXspan:", xspan, "\nYspan:", yspan)
+	var plrs []p.Player
+	db.Conn.First(&plrs)
+	for plr := range plrs {
+		fmt.Println(plrs[plr].Name)
+	}
 
-	var chunks = []c.Chunk{}
-	db.Conn.Find(&chunks, "x IN ? AND y IN ?", xspan, yspan)
+	db.Conn.Create(&p.Player{Name: "loona"})
 
-	fmt.Println("Found chunks: ")
-	for ch := range chunks {
-		fmt.Printf("Chunk [X: %d, Y: %d]\n", chunks[ch].X, chunks[ch].Y)
+	db.Conn.First(&plrs)
+	for plr := range plrs {
+		fmt.Println(plrs[plr].Name)
 	}
 }
