@@ -33,3 +33,7 @@ type Response struct {
 	Msg string `json:"msg"`
 	Err string `json:"err"`
 }
+
+type PlayerID struct {
+	Id uint `json:"id"`
+}

@@ -4,16 +4,13 @@ import (
 	"encoding/json"
 	"net"
 	"server/addys"
+	"server/conf"
 	"server/db"
 	"server/db/models/chunks"
 	"server/db/models/players"
 	"server/err_handling"
+	"time"
 )
-
-// todo: make the error handling just respond with an error and call it a day?
-//		err_handling.Respond, writes to UDP as it exits.
-//		defer writeToUDP?
-//		clients are given sess id's that let them modify specific players. what about logging in?
 
 var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr){
 	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
@@ -109,6 +106,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// takes in a player struct
 		// todo: ensure only certain fields are filled? id needs to be null
 		// 		maybe make a barebones player type they have to use and gets converted to regular player?
+		//		ensure player name is unique
 		var p players.Player
 		err := json.Unmarshal(buffer, &p)
 		defer err_handling.UDPRespond("Invalid request data", conn, addr)
@@ -145,12 +143,12 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		err_handling.Handle(err)
 
 		var plr players.Player
-		db.Conn.First(&plr, "name = ?", req["name"])
+		db.Conn.First(&plr, "name = ?", req["name"]) // todo: handle this.
 
 		// checks if the player is mapped to any addy already
 		// if so, deny the request
 		// if not, check if that address is mapped to any player
-		if addys.PlayerExists(plr) {
+		if addys.PlayerExists(plr) { // todo: make sure this gives the right errors
 			res, _ := json.Marshal(Response{Err: "Login refused. Specified player is logged in already"})
 			conn.WriteToUDP(res, addr)
 			return
@@ -159,31 +157,40 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// if the player and addy each are not mapped
 		// map em together
 		addys.Insert(plr, addr)
-		res, _ := json.Marshal(Response{Msg: "Logged in."})
+		res, _ := json.Marshal(PlayerID{Id: plr.ID})
 		conn.WriteToUDP(res, addr)
 	},
 
-	"default:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
-
+	"syn:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+		// does the player do this unprompted every sec?
 		/*
-			gets all chunk coords given a player's coordinates
+			decode the json data. requires a player
+			verify if the client owns that player. match()
+			if !time.Now().After(Addys[plr].Expiry) : expiry.add(time.second)
+
+			we dont need to send data back tho
 		*/
 
-		// get the data
-		var req PlayerCoords
-		err := json.Unmarshal(buffer, &req)
+		// decode data
+		var data map[string]uint
+		err := json.Unmarshal(buffer, &data)
 		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
 
-		// returns chunks
-		chunkCoords := chunks.ChunksInRenderDist(chunks.ToChunkCoords(req.Coords))
-		res_data := ChunkCoords{
-			SessToken:   req.SessToken,
-			ChunkCoords: chunkCoords,
+		// verify if the client owns that player
+		var plr players.Player
+		db.Conn.First(&plr, "id = ?", data["pid"])
+		if !(addys.AddyMatch(plr, addr)) {
+			return
 		}
 
-		// responds
-		res, _ := json.Marshal(res_data)
-		conn.WriteToUDP(res, addr)
+		// extend time
+		//client := addys.Addys[plr]
+		func(addyss *map[uint]addys.Client) { // increase it to no more than 5 seconds from now
+			if !time.Now().After((*addyss)[plr.ID].Expiry) {
+				(*addyss)[plr.ID] = addys.Client{Addy: (*addyss)[plr.ID].Addy, Expiry: time.Now().Add(conf.TIMEOUT * time.Second)}
+			}
+		}(&addys.Addys)
+
 	},
 }

@@ -45,7 +45,7 @@ func main() {
 	err_handling.Handle(err)
 	fmt.Printf("Listening on Port: %s\n", PORT)
 
-	go addys.DialWorker(&addys.Addys) // worker checks all addresses continuously
+	go addys.VerifyOnline(&addys.Addys) // worker checks all addresses continuously
 	// todo: doesnt delete players
 
 	buffer := make([]byte, 1024)

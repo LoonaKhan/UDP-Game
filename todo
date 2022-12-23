@@ -1,33 +1,29 @@
 another attempt at minecraft
 
 go server for all the requests
-    handshakes via connections. udp
-        in the net pkg
-        establish conn then each conn gets a goroutine?
-        since handshakes are stored in memory. store em in memory
-    sqlite server setup
-        some framework
-        player {
-            name string,
-            pos []int,
-            online bool or nil/handshake
-        }
-        chunk{}
-        block{}
-    research sending data over a server as structs instead of json
-        cpp connect and test sending json and structs to udp servers
     the actual routes
-
-cpp use zmq for a client
-    in udp
-
-cpp game in sdl(sfml for now?)
-
-
-actual chunk rendering and mesh system?
+        post chunk updates
+    including/verifying noise on server end?
+    every request(that moves plr or updates world) does idle checks
+        kiks idle plyers. resets a countdown of about 10 mins
 
 
+cpp client
+    test client
+        udp with zmq?
+    routes and communications with the server
+    perlin noise testing
+    multithreading review
+        comm with server
+        render
+        generation?
+    terrain
+        biomes:
+            mushroom fields, plains, desert, tundra
+        height:
+            valley, flat, mountains
+    mesh system?
 
-
-
-note: on the client side, the player continuously moves and does stuff, meanwhile, it updates the server on another thread and corrects the player if its position is inaccurate
+note:
+    on the client side, the player continuously moves and does stuff, meanwhile, it updates the server on another thread and corrects the player if its position is inaccurate
+    chunks are a map that are edited on another thread. rendering thread just draws em
