@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"server/routes"
+	"server/routes/route_structs"
 	"time"
 )
 
@@ -34,7 +34,7 @@ func main() {
 	c.Write([]byte("login:{\"name\": \"loona\"}"))
 	n, _, _ := c.ReadFromUDP(buffer)
 	fmt.Println(string(buffer[:n]))
-	var p routes.PlayerID
+	var p route_structs.PlayerID
 	err = json.Unmarshal(buffer[:n], &p)
 	if err != nil {
 		fmt.Println(err)
@@ -43,7 +43,7 @@ func main() {
 	fmt.Println("id:", p.Id)
 
 	for {
-		time.Sleep(100 * time.Millisecond) // 900ms
+		time.Sleep(4 * time.Second) // 4 secocnds
 		c.Write([]byte(fmt.Sprintf("syn:{\"pid\": %d}", p.Id)))
 		fmt.Println(time.Now(), "sent")
 	}

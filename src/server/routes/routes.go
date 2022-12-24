@@ -9,6 +9,7 @@ import (
 	"server/db/models/chunks"
 	"server/db/models/players"
 	"server/err_handling"
+	"server/routes/route_structs"
 	"time"
 )
 
@@ -20,7 +21,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		*/
 
 		// accepts the user data
-		var coords PlayerCoords
+		var coords route_structs.PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
 		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
@@ -34,7 +35,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		db.Conn.Find(&chunks, "x IN ? AND y IN ?", xspan, yspan)
 
 		// return the chunk span as well as the existing chunks
-		span := ChunkSpan{
+		span := route_structs.ChunkSpan{
 			Chunks: chunks,
 			TL:     TL,
 			BR:     BR,
@@ -53,7 +54,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		*/
 
 		// accepts user data
-		var span ChunkSpan
+		var span route_structs.ChunkSpan
 		err := json.Unmarshal(buffer, &span)
 		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
@@ -85,7 +86,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// accepts a position formatted as an array
 		// updates it on the server
 
-		var coords PlayerCoords
+		var coords route_structs.PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
 		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
@@ -122,18 +123,6 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		conn.WriteToUDP(res, addr)
 	},
 
-	"get_players:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) { // server queries all players connected and sends them back
-
-		// we dont require any relevant data. so dont check
-
-		var players []players.Player
-		addys.AllOnline(&players)
-
-		var plist = ListPlayers{Players: players}
-		res, _ := json.Marshal(plist)
-		conn.WriteToUDP(res, addr)
-
-	},
 	"login:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) { // todo: complete
 		// client sends in player login credentials along with their request
 		// server finds a player in the database with that info
@@ -149,7 +138,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// if so, deny the request
 		// if not, check if that address is mapped to any player
 		if addys.PlayerExists(plr) { // todo: make sure this gives the right errors
-			res, _ := json.Marshal(Response{Err: "Login refused. Specified player is logged in already"})
+			res, _ := json.Marshal(route_structs.Response{Err: "Login refused. Specified player is logged in already"})
 			conn.WriteToUDP(res, addr)
 			return
 		}
@@ -157,7 +146,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// if the player and addy each are not mapped
 		// map em together
 		addys.Insert(plr, addr)
-		res, _ := json.Marshal(PlayerID{Id: plr.ID})
+		res, _ := json.Marshal(route_structs.PlayerID{Id: plr.ID})
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -186,11 +175,14 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		// extend time
 		//client := addys.Addys[plr]
-		func(addyss *map[uint]addys.Client) { // increase it to no more than 5 seconds from now
-			if !time.Now().After((*addyss)[plr.ID].Expiry) {
-				(*addyss)[plr.ID] = addys.Client{Addy: (*addyss)[plr.ID].Addy, Expiry: time.Now().Add(conf.TIMEOUT * time.Second)}
+		a := <-addys.AddyChan
+		if !time.Now().After(a[plr.ID].Expiry) { // increase it to no more than 5 seconds from now
+			a[plr.ID] = addys.Client{
+				Addy:   a[plr.ID].Addy,
+				Expiry: time.Now().Add(conf.TIMEOUT * time.Second),
 			}
-		}(&addys.Addys)
+		}
+		addys.AddyChan <- a
 
 	},
 }

@@ -1,10 +1,13 @@
 package addys
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"server/conf"
+	"server/db"
 	p "server/db/models/players"
+	rs "server/routes/route_structs"
 	"time"
 )
 
@@ -27,15 +30,24 @@ type Client struct {
 	Expiry time.Time
 }
 
-var Addys = map[uint]Client{}
+/*
+We use a channel here because it is imperative to make sure all connected client are indeed connected
+and likewise for disconnected players.
+Because multiple threads will be writing to this map, it needs to be thread safe, hence a chan.
+*/
+var AddyChan = make(chan map[uint]Client, 1) /*w*/ // < ohayo nii san watashi wa addy-channn desu
 
 func Insert(plr p.Player, addy *net.UDPAddr) { // adds a player/client keypair
 	c := Client{Addy: addy, Expiry: time.Now().Add(conf.TIMEOUT * time.Second)}
-	Addys[plr.ID] = c
+	addys := <-AddyChan
+	addys[plr.ID] = c
+	AddyChan <- addys
 }
 
 func PlayerExists(plr p.Player) bool { // checks if a player is already mapped
-	_, exists := Addys[plr.ID]
+	addys := <-AddyChan
+	_, exists := addys[plr.ID]
+	AddyChan <- addys
 	return exists
 }
 
@@ -43,7 +55,9 @@ func AddyMatch(plr p.Player, addy *net.UDPAddr) bool {
 	// used to check if a client is logged in and using the right player.
 	// used upon any request
 	//fmt.Println(Addys[plr.ID].Addy, " = ", addy, "=", (Addys[plr.ID].Addy.IP.Equal(addy.IP) && Addys[plr.ID].Addy.Port == addy.Port))
-	return (Addys[plr.ID].Addy.IP.Equal(addy.IP) && Addys[plr.ID].Addy.Port == addy.Port)
+	addys := <-AddyChan
+	AddyChan <- addys
+	return (addys[plr.ID].Addy.IP.Equal(addy.IP) && addys[plr.ID].Addy.Port == addy.Port)
 }
 
 func Disconnect(id uint) {
@@ -53,31 +67,44 @@ func Disconnect(id uint) {
 		regardless, we delete the client's association with their player, meaning they are effectively kicked.
 		we can make the gameclient auto disocnnect after losing the player
 	*/
-	delete(Addys, id) // now there is no more addy connected and that player is freed
+	addys := <-AddyChan
+	delete(addys, id) // now there is no more addy connected and that player is freed
+	AddyChan <- addys
 }
 
-func AllOnline(plrs *[]p.Player) {
-	for _ = range Addys {
-		//*plrs = append(*plrs, plr) // todo: fix this
-	}
-}
-
-func VerifyOnline(addys *map[uint]Client) {
+func VerifyOnline(conn *net.UDPConn) {
 	/*
 		Runs constantly in the background.
 		Checks if the given client has expired their time.
 		if so, disconnect them
-		//todo: verify online and synack fight over Addys. fix
+		then sends all currently existing players back to the client
 	*/
 	for {
-		for plr, client := range *addys {
+		var plrs []p.Player
+		var plrIds []uint
+		addys := <-AddyChan
+
+		for plr, client := range addys {
 			fmt.Println("expiry:", client.Expiry.String())
-			if time.Now().After(client.Expiry) {
+			if time.Now().After(client.Expiry) { // diconnect
 				Disconnect(plr)
 				fmt.Println("disconnected:", plr)
+			} else { // otherwise append them to the plr id's array
+				plrIds = append(plrIds, plr)
 			}
 		}
-		time.Sleep(100 * time.Millisecond)
+
+		if len(addys) > 0 { // only sends back if there are clients to connect to
+			db.Conn.Find(&plrs, "id IN ?", plrIds) // finds all players online
+
+			// sends them to all clients
+			for _, client := range addys {
+				var plist = rs.ListPlayers{Players: plrs}
+				res, _ := json.Marshal(plist)
+				conn.WriteToUDP(res, client.Addy)
+			}
+		}
+		AddyChan <- addys
 	}
 }
 

@@ -1,4 +1,4 @@
-package routes
+package route_structs
 
 import (
 	"server/db/models/chunks"

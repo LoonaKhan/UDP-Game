@@ -35,6 +35,9 @@ func main() {
 	err_handling.Handle(db.Conn.AutoMigrate(&chunks.Chunk{}))
 	err_handling.Handle(db.Conn.AutoMigrate(&blocks.Block{}))
 
+	// fills up the address channel
+	addys.AddyChan <- map[uint]addys.Client{}
+
 	// sets up the port
 	PORT := fmt.Sprintf(":%d", conf.PORT)
 
@@ -45,8 +48,7 @@ func main() {
 	err_handling.Handle(err)
 	fmt.Printf("Listening on Port: %s\n", PORT)
 
-	go addys.VerifyOnline(&addys.Addys) // worker checks all addresses continuously
-	// todo: doesnt delete players
+	go addys.VerifyOnline(conn) // worker checks all addresses continuously
 
 	buffer := make([]byte, 1024)
 	for { // runs the server indefinitely
