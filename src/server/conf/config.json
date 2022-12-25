@@ -4,5 +4,5 @@
   "RENDER_DISTANCE": 16,
   "DB_FILE": "db.sqlite",
   "MEM": "file::memory:?cache=shared",
-  "TIMEOUT": 1
+  "TIMEOUT": 5
 }
