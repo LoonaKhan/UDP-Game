@@ -79,7 +79,25 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// instead, the server does this when another player updates
 	},
 
-	"post_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {},
+	"post_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+		/*
+		* player sends in a chunk that has been updated.
+		* server updates that chunk and sets it to all players within render distance of that chunk.
+		* */
+		var c = map[string]chunks.Chunk{}
+		err := json.Unmarshal(buffer, &c)
+		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		err_handling.Handle(err)
+
+		// update the database
+		
+		// finds all addys within render distance and updates them 
+		// should fetch all players beforehand. find if they addys match
+		// takes the current chunk and its TL and BR
+		// for client.players in addy, convert to chunk coords and check if within TL/BR
+		addys <- AddyChan 
+
+	},
 
 	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
 		// todo: Does not allow the player to move faster than the max speed. if they do, only move them by max speed

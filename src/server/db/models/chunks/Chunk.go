@@ -40,7 +40,17 @@ func ChunksInRenderDist(curCunk []int) [][]int { // returns all chunks within re
 	return chunks
 }
 
-func ChunkSpanCoords(curChunk []int) (TL [2]int, BR [2]int) { // returns the top-left and bottom-right chunks in a span
+func IsInRenderDist(c1 []int, c2 []int) bool {
+	/*
+	* takes in 2 coordinates and determines if they are within render distance 
+	* */
+	return (
+		math.Abs(c1[0] - c2[0]) <= conf.RENDER_DISTANCE &&
+		math.Abs(c1[1] - c2[1]) <= conf.RENDER_DISTANCE
+	)
+} 
+
+func chunkSpanCoords(curChunk []int) (TL [2]int, BR [2]int) { // returns the top-left and bottom-right chunks in a span
 	/*
 	 this is done by sending the top left(TL) and bottom right(BR) chunk coordinates
 	 all other chunks can be found within
@@ -50,7 +60,7 @@ func ChunkSpanCoords(curChunk []int) (TL [2]int, BR [2]int) { // returns the top
 	return TL, BR
 }
 
-func ChunkXSpan(L int, R int) []int {
+func chunkXSpan(L int, R int) []int {
 	/*
 		Returns all X coordinates in a given chunk span
 		takes in the Left and Right most coordinates and returns the range between them
@@ -63,7 +73,7 @@ func ChunkXSpan(L int, R int) []int {
 	return Xspan
 }
 
-func ChunkYSpan(T int, B int) []int {
+func chunkYSpan(T int, B int) []int {
 	/*
 		Returns all Y coords in a given chunks span using the top and bottom most coords and returns a range between em
 		used for SQL queries
@@ -85,9 +95,9 @@ func ChunkSpan(curChunk []int) (TL [2]int, BR [2]int, xspan []int, yspan []int) 
 		This(2C ~= Xspan + Yspan + TL+ BR) is much more efficient than sending every possible chunk combination(C^2).
 	*/
 
-	TL, BR = ChunkSpanCoords(curChunk)
-	xspan = ChunkXSpan(TL[0], BR[0])
-	yspan = ChunkYSpan(TL[1], BR[1])
+	TL, BR = chunkSpanCoords(curChunk)
+	xspan = chunkXSpan(TL[0], BR[0])
+	yspan = chunkYSpan(TL[1], BR[1])
 
 	return TL, BR, xspan, yspan
 }
