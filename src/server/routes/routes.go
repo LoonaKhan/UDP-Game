@@ -3,7 +3,7 @@ package routes
 import (
 	"encoding/json"
 	"net"
-	"server/addys"
+	a "server/addys"
 	"server/conf"
 	"server/db"
 	"server/db/models/chunks"
@@ -72,31 +72,43 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		conn.WriteToUDP(res, addr)
 	},
 
-	"get_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
-		// client sends all loaded chunks
-		// server checks for differences and sends back the differences
-		// will be very inefficient.
-		// instead, the server does this when another player updates
-	},
-
 	"post_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
 		/*
 		* player sends in a chunk that has been updated.
 		* server updates that chunk and sets it to all players within render distance of that chunk.
 		* */
-		var c = map[string]chunks.Chunk{}
-		err := json.Unmarshal(buffer, &c)
+		var updated = route_structs.UpdatedChunk{}
+		err := json.Unmarshal(buffer, &updated)
 		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
 
 		// update the database
-		
-		// finds all addys within render distance and updates them 
+		db.Conn.Update("blocks", &updated.Chunk)
+
+		// finds all addys within render distance and updates them
 		// should fetch all players beforehand. find if they addys match
 		// takes the current chunk and its TL and BR
 		// for client.players in addy, convert to chunk coords and check if within TL/BR
-		addys <- AddyChan 
+		var plrs []players.Player
+		var plrIds []uint
 
+		// gets all players from addys
+		addys := <-a.AddyChan
+		for plr := range addys {
+			plrIds = append(plrIds, plr)
+		}
+		a.AddyChan <- addys
+
+		// retrieve those players
+		db.Conn.Find(&plrs, "id IN ?", plrIds)
+
+		// check if in render distance. if so, update them
+		for plr := range plrs {
+			plrChunk := chunks.ToChunkCoords([]int{plrs[plr].X, plrs[plr].Y})
+			if chunks.IsInRenderDist([]int{updated.Chunk.X, updated.Chunk.Y}, plrChunk) {
+				conn.WriteToUDP(buffer, addys[plrs[plr].ID].Addy)
+			}
+		}
 	},
 
 	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
@@ -155,7 +167,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// checks if the player is mapped to any addy already
 		// if so, deny the request
 		// if not, check if that address is mapped to any player
-		if addys.PlayerExists(plr) { // todo: make sure this gives the right errors
+		if a.PlayerExists(plr) { // todo: make sure this gives the right errors
 			res, _ := json.Marshal(route_structs.Response{Err: "Login refused. Specified player is logged in already"})
 			conn.WriteToUDP(res, addr)
 			return
@@ -163,7 +175,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		// if the player and addy each are not mapped
 		// map em together
-		addys.Insert(plr, addr)
+		a.Insert(plr, addr)
 		res, _ := json.Marshal(route_structs.PlayerID{Id: plr.ID})
 		conn.WriteToUDP(res, addr)
 	},
@@ -187,20 +199,20 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// verify if the client owns that player
 		var plr players.Player
 		db.Conn.First(&plr, "id = ?", data["pid"])
-		if !(addys.AddyMatch(plr, addr)) {
+		if !(a.AddyMatch(plr, addr)) {
 			return
 		}
 
 		// extend time
 		//client := addys.Addys[plr]
-		a := <-addys.AddyChan
-		if !time.Now().After(a[plr.ID].Expiry) { // increase it to no more than 5 seconds from now
-			a[plr.ID] = addys.Client{
-				Addy:   a[plr.ID].Addy,
+		addys := <-a.AddyChan
+		if !time.Now().After(addys[plr.ID].Expiry) { // increase it to no more than 5 seconds from now
+			addys[plr.ID] = a.Client{
+				Addy:   addys[plr.ID].Addy,
 				Expiry: time.Now().Add(conf.TIMEOUT * time.Second),
 			}
 		}
-		addys.AddyChan <- a
+		a.AddyChan <- addys
 
 	},
 }

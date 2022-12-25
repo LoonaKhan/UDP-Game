@@ -37,3 +37,7 @@ type Response struct {
 type PlayerID struct {
 	Id uint `json:"id"`
 }
+
+type UpdatedChunk struct {
+	Chunk chunks.Chunk `json:"chunk"`
+}

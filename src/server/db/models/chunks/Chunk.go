@@ -2,6 +2,7 @@ package chunks
 
 import (
 	"gorm.io/gorm"
+	"math"
 	"server/conf"
 	"server/db/models/blocks"
 )
@@ -42,13 +43,11 @@ func ChunksInRenderDist(curCunk []int) [][]int { // returns all chunks within re
 
 func IsInRenderDist(c1 []int, c2 []int) bool {
 	/*
-	* takes in 2 coordinates and determines if they are within render distance 
+	* takes in 2 coordinates and determines if they are within render distance
 	* */
-	return (
-		math.Abs(c1[0] - c2[0]) <= conf.RENDER_DISTANCE &&
-		math.Abs(c1[1] - c2[1]) <= conf.RENDER_DISTANCE
-	)
-} 
+	return int(math.Abs(float64(c1[0]-c2[0]))) <= conf.RENDER_DISTANCE &&
+		int(math.Abs(float64(c1[1]-c2[1]))) <= conf.RENDER_DISTANCE
+}
 
 func chunkSpanCoords(curChunk []int) (TL [2]int, BR [2]int) { // returns the top-left and bottom-right chunks in a span
 	/*

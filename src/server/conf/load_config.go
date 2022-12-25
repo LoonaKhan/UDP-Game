@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"server/json_utils"
+	"server/utils/json_utils"
 	"time"
 )
 
