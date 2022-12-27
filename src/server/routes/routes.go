@@ -2,7 +2,6 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net"
 	a "server/addys"
 	"server/conf"
@@ -21,11 +20,12 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			User submits their coordinates,
 			server sends back all existing chunks as well as the top-left and bottom-right coords of the chunk span
 		*/
+		header := "get_chunks:"
 
 		// accepts the user data
 		var coords route_structs.PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
-		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
 		// uses coords to find the chunk span to render
@@ -54,11 +54,12 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			  via handshakes
 				so no get chunks method
 		*/
+		header := "post_chunks:"
 
 		// accepts user data
 		var span route_structs.ChunkSpan
 		err := json.Unmarshal(buffer, &span)
-		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
 		// adds all chunks into the database
@@ -79,15 +80,15 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		* player sends in a chunk that has been updated.
 		* server updates that chunk and sets it to all players within render distance of that chunk.
 		* */
+		header := "post_chunk_updates:"
+
 		var updated = route_structs.UpdatedChunk{}
 		err := json.Unmarshal(buffer, &updated)
-		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
-		fmt.Println("valid data")
 
 		// update the database
 		db.Conn.Update("blocks", &updated.Chunk)
-		fmt.Println("Updated DB")
 
 		// finds all addys within render distance and updates them
 		// should fetch all players beforehand. find if they addys match
@@ -102,33 +103,31 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			plrIds = append(plrIds, plr)
 		}
 		a.AddyChan <- addys
-		fmt.Println("Got all player id's from addys")
 
 		// retrieve those players
 		db.Conn.Find(&plrs, "id IN ?", plrIds)
-		fmt.Println("Retrieved players")
 
 		// check if in render distance. if so, update them
-		for plr := range plrs {
+		for plr := range plrs { // todo: ignores current player
 			plrChunk := chunks.ToChunkCoords([]int{plrs[plr].X, plrs[plr].Y})
 			if chunks.IsInRenderDist([]int{updated.Chunk.X, updated.Chunk.Y}, plrChunk) {
 				conn.WriteToUDP(buffer, addys[plrs[plr].ID].Addy)
 			}
 		}
-		fmt.Println("Sent to all clients within render dist")
 	},
 
 	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
 		// todo: Does not allow the player to move faster than the max speed. if they do, only move them by max speed
 		// accepts a position formatted as an array
 		// updates it on the server
+		header := "update_pos:"
 
 		var coords route_structs.PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
-		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
-		defer err_handling.UDPRespond("Unable to update position", conn, addr)
+		defer UDPRespondErr("Unable to update position", conn, addr, header)
 		err_handling.Handle(db.Conn.Model(&players.Player{}).
 			Where("id = ?", coords.ID).
 			Updates(players.Player{X: coords.Coords[0], Y: coords.Coords[1]}).Error)
@@ -140,17 +139,20 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		conn.WriteToUDP(res, addr)
 
 	},
+
 	"post_player:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
 		// takes in a player struct
 		// todo: ensure only certain fields are filled? id needs to be null
 		// 		maybe make a barebones player type they have to use and gets converted to regular player?
 		//		ensure player name is unique
+		header := "post_player:"
+
 		var p players.Player
 		err := json.Unmarshal(buffer, &p)
-		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
-		defer err_handling.UDPRespond("Unable to create player", conn, addr)
+		defer UDPRespondErr("Unable to create player", conn, addr, header)
 		err_handling.Handle(db.Conn.Create(&p).Error)
 
 		res_data := map[string]string{
@@ -163,9 +165,11 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 	"login:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) { // todo: complete
 		// client sends in player login credentials along with their request
 		// server finds a player in the database with that info
+		header := "login:"
+
 		var req map[string]string
 		err := json.Unmarshal(buffer, &req)
-		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
 		var plr players.Player
@@ -196,11 +200,12 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 			we dont need to send data back tho
 		*/
+		header := "syn"
 
 		// decode data
 		var data map[string]uint
 		err := json.Unmarshal(buffer, &data)
-		defer err_handling.UDPRespond("Invalid request data", conn, addr)
+		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
 		// verify if the client owns that player
@@ -222,4 +227,12 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		a.AddyChan <- addys
 
 	},
+}
+
+// another response function which is like recover, but it Writes to UDP the argument u send it
+func UDPRespondErr(msg string, conn *net.UDPConn, addr *net.UDPAddr, header string) { // recovers a thread and sends a response to the client
+	if r := recover(); r != nil {
+		res := net_utils.FormatRes(route_structs.Response{Err: msg}, header)
+		conn.WriteToUDP(res, addr)
+	}
 }

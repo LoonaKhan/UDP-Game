@@ -2,9 +2,6 @@ package err_handling
 
 import (
 	"fmt"
-	"net"
-	"server/routes/route_structs"
-	"server/utils/net_utils"
 )
 
 func Handle(err error) { // panics. standalone good for fatal errors
@@ -20,13 +17,5 @@ func Handle(err error) { // panics. standalone good for fatal errors
 func Recover(msg string) { // if the error is not fatal, do this.
 	if r := recover(); r != nil {
 		fmt.Printf("Recovered: %s", msg)
-	}
-}
-
-// another response function which is like recover, but it Writes to UDP the argument u send it
-func UDPRespond(msg string, conn *net.UDPConn, addr *net.UDPAddr) { // recovers a thread and sends a response to the client
-	if r := recover(); r != nil {
-		res := net_utils.FormatRes(route_structs.Response{Err: msg}, "res")
-		conn.WriteToUDP(res, addr)
 	}
 }
