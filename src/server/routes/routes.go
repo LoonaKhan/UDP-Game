@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	a "server/addys"
 	"server/conf"
@@ -12,6 +13,16 @@ import (
 	"server/routes/route_structs"
 	"time"
 )
+
+func FormatRes[T any](resData T, header string) []byte {
+	/*
+		marshals the sent data to json
+		appends the prefix to the data
+	*/
+	res, _ := json.Marshal(resData)
+	stringified := fmt.Sprintf("%s:%s", header, string(res))
+	return []byte(stringified)
+}
 
 var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr){
 	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
@@ -81,9 +92,11 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		err := json.Unmarshal(buffer, &updated)
 		defer err_handling.UDPRespond("Invalid request data", conn, addr)
 		err_handling.Handle(err)
+		fmt.Println("valid data")
 
 		// update the database
 		db.Conn.Update("blocks", &updated.Chunk)
+		fmt.Println("Updated DB")
 
 		// finds all addys within render distance and updates them
 		// should fetch all players beforehand. find if they addys match
@@ -98,9 +111,11 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			plrIds = append(plrIds, plr)
 		}
 		a.AddyChan <- addys
+		fmt.Println("Got all player id's from addys")
 
 		// retrieve those players
 		db.Conn.Find(&plrs, "id IN ?", plrIds)
+		fmt.Println("Retrieved players")
 
 		// check if in render distance. if so, update them
 		for plr := range plrs {
@@ -109,6 +124,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 				conn.WriteToUDP(buffer, addys[plrs[plr].ID].Addy)
 			}
 		}
+		fmt.Println("Sent to all clients within render dist")
 	},
 
 	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
@@ -176,7 +192,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// if the player and addy each are not mapped
 		// map em together
 		a.Insert(plr, addr)
-		res, _ := json.Marshal(route_structs.PlayerID{Id: plr.ID})
+		res := FormatRes(route_structs.PlayerID{Id: plr.ID}, "login")
 		conn.WriteToUDP(res, addr)
 	},
 

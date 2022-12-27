@@ -60,16 +60,17 @@ func AddyMatch(plr p.Player, addy *net.UDPAddr) bool {
 	return (addys[plr.ID].Addy.IP.Equal(addy.IP) && addys[plr.ID].Addy.Port == addy.Port)
 }
 
-func Disconnect(id uint) {
+func Disconnect(id uint, addys *map[uint]Client) {
 	/*
 		we cant disconnect a player from the server side.
 		however, we can order them to disconnect technically.
 		regardless, we delete the client's association with their player, meaning they are effectively kicked.
 		we can make the gameclient auto disocnnect after losing the player
 	*/
-	addys := <-AddyChan
-	delete(addys, id) // now there is no more addy connected and that player is freed
-	AddyChan <- addys
+	if _, ok := (*addys)[id]; ok {
+		delete(*addys, id) // now there is no more addy connected and that player is freed
+		fmt.Println("disconnected:", id)
+	}
 }
 
 func VerifyOnline(conn *net.UDPConn) {
@@ -85,10 +86,8 @@ func VerifyOnline(conn *net.UDPConn) {
 		addys := <-AddyChan
 
 		for plr, client := range addys {
-			fmt.Println("expiry:", client.Expiry.String())
-			if time.Now().After(client.Expiry) { // diconnect
-				Disconnect(plr)
-				fmt.Println("disconnected:", plr)
+			if time.Now().After(client.Expiry) || time.Now().Equal(client.Expiry) { // disconnect
+				Disconnect(plr, &addys)
 			} else { // otherwise append them to the plr id's array
 				plrIds = append(plrIds, plr)
 			}
@@ -96,12 +95,13 @@ func VerifyOnline(conn *net.UDPConn) {
 
 		if len(addys) > 0 { // only sends back if there are clients to connect to
 			db.Conn.Find(&plrs, "id IN ?", plrIds) // finds all players online
+			var plist = rs.ListPlayers{Players: plrs}
+			res, _ := json.Marshal(plist)
+			res_str := string(res)
 
 			// sends them to all clients
 			for _, client := range addys {
-				var plist = rs.ListPlayers{Players: plrs}
-				res, _ := json.Marshal(plist)
-				conn.WriteToUDP(res, client.Addy)
+				conn.WriteToUDP([]byte(fmt.Sprintf("players:%s", res_str)), client.Addy)
 			}
 		}
 		AddyChan <- addys

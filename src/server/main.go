@@ -20,7 +20,7 @@ intakes a user's position
 based on that position, determine which chunks to load
 */
 
-func parseHeader(buffer []byte) (method []byte, idx int) {
+func parseHeader(buffer []byte) (method []byte, idx int) { // error handle for no semi colons
 	idx = strings.Index(string(buffer), ":") + 1 // dont use a colon as that is used in json.
 	method = buffer[:idx]
 	//fmt.Printf(string(method))
