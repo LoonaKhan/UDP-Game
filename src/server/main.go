@@ -50,8 +50,8 @@ func main() {
 
 	go addys.VerifyOnline(conn) // worker checks all addresses continuously
 
-	buffer := make([]byte, 1024)
 	for { // runs the server indefinitely
+		buffer := make([]byte, 1024)
 		n, addr, err := conn.ReadFromUDP(buffer)
 		err_handling.Handle(err)
 
