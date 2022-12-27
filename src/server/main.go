@@ -55,11 +55,11 @@ func main() {
 		n, addr, err := conn.ReadFromUDP(buffer)
 		err_handling.Handle(err)
 
-		method, idx := parseHeader(buffer) // parses the header to find the method
+		header, idx := parseHeader(buffer) // parses the header to find the header
 
-		_, exists := routes.Methods[string(method)]
+		_, exists := routes.Methods[string(header)]
 		if exists {
-			go routes.Methods[string(method)](buffer[idx:n], conn, addr)
+			go routes.Methods[string(header)](buffer[idx:n], conn, addr, string(header))
 		}
 	}
 

@@ -14,13 +14,12 @@ import (
 	"time"
 )
 
-var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr){
-	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string){
+	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		/*
 			User submits their coordinates,
 			server sends back all existing chunks as well as the top-left and bottom-right coords of the chunk span
 		*/
-		header := "get_chunks:"
 
 		// accepts the user data
 		var coords route_structs.PlayerCoords
@@ -42,11 +41,11 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			TL:     TL,
 			BR:     BR,
 		}
-		res, _ := json.Marshal(span)
+		res := net_utils.FormatRes(span, header)
 		conn.WriteToUDP(res, addr)
 	},
 
-	"post_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+	"post_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		/*
 			when a player posts chunk updates,
 			  update
@@ -54,7 +53,6 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			  via handshakes
 				so no get chunks method
 		*/
-		header := "post_chunks:"
 
 		// accepts user data
 		var span route_structs.ChunkSpan
@@ -71,16 +69,18 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		res_data := map[string]string{
 			"msg": "Recieved",
 		}
-		res, _ := json.Marshal(res_data)
+		res := net_utils.FormatRes(res_data, header)
 		conn.WriteToUDP(res, addr)
 	},
 
-	"post_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+	"post_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		/*
-		* player sends in a chunk that has been updated.
-		* server updates that chunk and sets it to all players within render distance of that chunk.
-		* */
-		header := "post_chunk_updates:"
+			* player sends in a chunk that has been updated.
+			* server updates that chunk and sets it to all players within render distance of that chunk.
+			todo: only needs a single block to be updated?
+				saves bandwidth for each update.
+				updates happen too frequently?
+			* */
 
 		var updated = route_structs.UpdatedChunk{}
 		err := json.Unmarshal(buffer, &updated)
@@ -111,16 +111,15 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		for plr := range plrs { // todo: ignores current player
 			plrChunk := chunks.ToChunkCoords([]int{plrs[plr].X, plrs[plr].Y})
 			if chunks.IsInRenderDist([]int{updated.Chunk.X, updated.Chunk.Y}, plrChunk) {
-				conn.WriteToUDP(buffer, addys[plrs[plr].ID].Addy)
+				conn.WriteToUDP(buffer, addys[plrs[plr].ID].Addy) // todo: use a different header?
 			}
 		}
 	},
 
-	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		// todo: Does not allow the player to move faster than the max speed. if they do, only move them by max speed
 		// accepts a position formatted as an array
 		// updates it on the server
-		header := "update_pos:"
 
 		var coords route_structs.PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
@@ -130,22 +129,22 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		defer UDPRespondErr("Unable to update position", conn, addr, header)
 		err_handling.Handle(db.Conn.Model(&players.Player{}).
 			Where("id = ?", coords.ID).
-			Updates(players.Player{X: coords.Coords[0], Y: coords.Coords[1]}).Error)
+			Updates(players.Player{X: coords.Coords[0], Y: coords.Coords[1]}).Error,
+		)
 
 		res_data := map[string]string{
 			"msg": "Updated",
 		}
-		res, _ := json.Marshal(res_data)
+		res := net_utils.FormatRes(res_data, header)
 		conn.WriteToUDP(res, addr)
 
 	},
 
-	"post_player:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+	"post_player:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		// takes in a player struct
 		// todo: ensure only certain fields are filled? id needs to be null
 		// 		maybe make a barebones player type they have to use and gets converted to regular player?
 		//		ensure player name is unique
-		header := "post_player:"
 
 		var p players.Player
 		err := json.Unmarshal(buffer, &p)
@@ -158,14 +157,13 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		res_data := map[string]string{
 			"msg": "Created",
 		}
-		res, _ := json.Marshal(res_data)
+		res := net_utils.FormatRes(res_data, header)
 		conn.WriteToUDP(res, addr)
 	},
 
-	"login:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) { // todo: complete
+	"login:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		// client sends in player login credentials along with their request
 		// server finds a player in the database with that info
-		header := "login:"
 
 		var req map[string]string
 		err := json.Unmarshal(buffer, &req)
@@ -179,7 +177,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// if so, deny the request
 		// if not, check if that address is mapped to any player
 		if a.PlayerExists(plr) { // todo: make sure this gives the right errors
-			res, _ := json.Marshal(route_structs.Response{Err: "Login refused. Specified player is logged in already"})
+			res := net_utils.FormatRes(route_structs.Response{Err: "Login refused. Specified player is logged in already"}, header)
 			conn.WriteToUDP(res, addr)
 			return
 		}
@@ -187,11 +185,11 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// if the player and addy each are not mapped
 		// map em together
 		a.Insert(plr, addr)
-		res := net_utils.FormatRes(route_structs.PlayerID{Id: plr.ID}, "login")
+		res := net_utils.FormatRes(route_structs.PlayerID{Id: plr.ID}, header)
 		conn.WriteToUDP(res, addr)
 	},
 
-	"syn:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr) {
+	"syn:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		// does the player do this unprompted every sec?
 		/*
 			decode the json data. requires a player
@@ -200,7 +198,6 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 			we dont need to send data back tho
 		*/
-		header := "syn"
 
 		// decode data
 		var data map[string]uint

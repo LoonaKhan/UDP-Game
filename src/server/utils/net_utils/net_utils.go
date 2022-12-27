@@ -11,6 +11,6 @@ func FormatRes[T any](resData T, header string) []byte {
 		appends the prefix to the data
 	*/
 	res, _ := json.Marshal(resData)
-	stringified := fmt.Sprintf("%s:%s", header, string(res))
+	stringified := fmt.Sprintf("%s%s", header, string(res))
 	return []byte(stringified)
 }
