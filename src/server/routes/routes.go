@@ -6,11 +6,11 @@ import (
 	a "server/addys"
 	"server/conf"
 	"server/db"
-	"server/db/models/chunks"
-	"server/db/models/players"
+	c "server/db/models/chunks"
+	p "server/db/models/players"
 	"server/err_handling"
-	"server/routes/route_structs"
-	"server/utils/net_utils"
+	rs "server/routes/route_structs"
+	nu "server/utils/net_utils"
 	"time"
 )
 
@@ -22,40 +22,42 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		*/
 
 		// accepts the user data
-		var coords route_structs.PlayerCoords
+		var coords rs.PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
 		// uses coords to find the chunk span to render
-		curChunk := chunks.ToChunkCoords(coords.Coords)
-		TL, BR, xspan, yspan := chunks.ChunkSpan(curChunk)
+		curChunk := c.ToChunkCoords(coords.Coords)
+		TL, BR, xspan, yspan := c.ChunkSpan(curChunk)
 
 		// gets all chunks in the chunk span that already exist
-		var chunks []chunks.Chunk
+		var chunks []c.Chunk
 		db.Conn.Find(&chunks, "x IN ? AND y IN ?", xspan, yspan)
 
 		// return the chunk span as well as the existing chunks
-		span := route_structs.ChunkSpan{
+		span := rs.ChunkSpan{
 			Chunks: chunks,
 			TL:     TL,
 			BR:     BR,
 		}
-		res := net_utils.FormatRes(span, header)
+		res := nu.FormatRes(span, header)
 		conn.WriteToUDP(res, addr)
 	},
 
 	"post_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		/*
-			when a player posts chunk updates,
-			  update
-			  also send those updates to all clients currently connected
-			  via handshakes
-				so no get chunks method
+				when a player posts chunk updates,
+				  update
+				  also send those updates to all clients currently connected
+				  via handshakes
+					so no get chunks method
+
+			todo: only allow chunks that arent alreay created
 		*/
 
 		// accepts user data
-		var span route_structs.ChunkSpan
+		var span rs.ChunkSpan
 		err := json.Unmarshal(buffer, &span)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
@@ -69,7 +71,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		res_data := map[string]string{
 			"msg": "Recieved",
 		}
-		res := net_utils.FormatRes(res_data, header)
+		res := nu.FormatRes(res_data, header)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -82,7 +84,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 				updates happen too frequently?
 			* */
 
-		var updated = route_structs.UpdatedChunk{}
+		var updated = rs.UpdatedChunk{}
 		err := json.Unmarshal(buffer, &updated)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
@@ -94,7 +96,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// should fetch all players beforehand. find if they addys match
 		// takes the current chunk and its TL and BR
 		// for client.players in addy, convert to chunk coords and check if within TL/BR
-		var plrs []players.Player
+		var plrs []p.Player
 		var plrIds []uint
 
 		// gets all players from addys
@@ -109,8 +111,8 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		// check if in render distance. if so, update them
 		for plr := range plrs { // todo: ignores current player
-			plrChunk := chunks.ToChunkCoords([]int{plrs[plr].X, plrs[plr].Y})
-			if chunks.IsInRenderDist([]int{updated.Chunk.X, updated.Chunk.Y}, plrChunk) {
+			plrChunk := c.ToChunkCoords([]int{plrs[plr].X, plrs[plr].Y})
+			if c.IsInRenderDist([]int{updated.Chunk.X, updated.Chunk.Y}, plrChunk) {
 				conn.WriteToUDP(buffer, addys[plrs[plr].ID].Addy) // todo: use a different header?
 			}
 		}
@@ -121,21 +123,21 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// accepts a position formatted as an array
 		// updates it on the server
 
-		var coords route_structs.PlayerCoords
+		var coords rs.PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
 		defer UDPRespondErr("Unable to update position", conn, addr, header)
-		err_handling.Handle(db.Conn.Model(&players.Player{}).
+		err_handling.Handle(db.Conn.Model(&p.Player{}).
 			Where("id = ?", coords.ID).
-			Updates(players.Player{X: coords.Coords[0], Y: coords.Coords[1]}).Error,
+			Updates(p.Player{X: coords.Coords[0], Y: coords.Coords[1]}).Error,
 		)
 
 		res_data := map[string]string{
 			"msg": "Updated",
 		}
-		res := net_utils.FormatRes(res_data, header)
+		res := nu.FormatRes(res_data, header)
 		conn.WriteToUDP(res, addr)
 
 	},
@@ -146,18 +148,18 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// 		maybe make a barebones player type they have to use and gets converted to regular player?
 		//		ensure player name is unique
 
-		var p players.Player
-		err := json.Unmarshal(buffer, &p)
+		var plr p.Player
+		err := json.Unmarshal(buffer, &plr)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
 		defer UDPRespondErr("Unable to create player", conn, addr, header)
-		err_handling.Handle(db.Conn.Create(&p).Error)
+		err_handling.Handle(db.Conn.Create(&plr).Error)
 
 		res_data := map[string]string{
 			"msg": "Created",
 		}
-		res := net_utils.FormatRes(res_data, header)
+		res := nu.FormatRes(res_data, header)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -170,14 +172,14 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
-		var plr players.Player
+		var plr p.Player
 		db.Conn.First(&plr, "name = ?", req["name"]) // todo: handle this.
 
 		// checks if the player is mapped to any addy already
 		// if so, deny the request
 		// if not, check if that address is mapped to any player
 		if a.PlayerExists(plr) { // todo: make sure this gives the right errors
-			res := net_utils.FormatRes(route_structs.Response{Err: "Login refused. Specified player is logged in already"}, header)
+			res := nu.FormatRes(rs.Response{Err: "Login refused. Specified player is logged in already"}, header)
 			conn.WriteToUDP(res, addr)
 			return
 		}
@@ -185,7 +187,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// if the player and addy each are not mapped
 		// map em together
 		a.Insert(plr, addr)
-		res := net_utils.FormatRes(route_structs.PlayerID{Id: plr.ID}, header)
+		res := nu.FormatRes(rs.PlayerID{Id: plr.ID}, header)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -206,7 +208,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		err_handling.Handle(err)
 
 		// verify if the client owns that player
-		var plr players.Player
+		var plr p.Player
 		db.Conn.First(&plr, "id = ?", data["pid"])
 		if !(a.AddyMatch(plr, addr)) {
 			return
@@ -229,7 +231,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 // another response function which is like recover, but it Writes to UDP the argument u send it
 func UDPRespondErr(msg string, conn *net.UDPConn, addr *net.UDPAddr, header string) { // recovers a thread and sends a response to the client
 	if r := recover(); r != nil {
-		res := net_utils.FormatRes(route_structs.Response{Err: msg}, header)
+		res := nu.FormatRes(rs.Response{Err: msg}, header)
 		conn.WriteToUDP(res, addr)
 	}
 }
