@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	a "server/addys"
@@ -20,11 +21,14 @@ intakes a user's position
 based on that position, determine which chunks to load
 */
 
-func parseHeader(buffer []byte) (method []byte, idx int) { // error handle for no semi colons
+func parseHeader(buffer []byte) (method []byte, idx int, err error) { // error handle for no semi colons
 	idx = strings.Index(string(buffer), ":") + 1 // dont use a colon as that is used in json.
 	method = buffer[:idx]
+	if idx == -1 {
+		return method, idx, errors.New("semicolon not found")
+	}
 	//fmt.Printf(string(method))
-	return method, idx
+	return method, idx, nil
 }
 
 func main() {
@@ -55,10 +59,12 @@ func main() {
 		n, addr, err := conn.ReadFromUDP(buffer)
 		err_handling.Handle(err)
 
-		header, idx := parseHeader(buffer) // parses the header to find the header
-
-		_, exists := routes.Methods[string(header)]
-		if exists {
+		// ensures the request is formatted properly
+		header, idx, err := parseHeader(buffer) // headers and body need to be seperated by a semicolon
+		if err != nil {                         // if no semicolon is detected, ignore the request
+			continue
+		}
+		if _, exists := routes.Methods[string(header)]; exists { // ensures the header is valid
 			go routes.Methods[string(header)](buffer[idx:n], conn, addr, string(header))
 		}
 	}
