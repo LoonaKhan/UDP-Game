@@ -34,7 +34,7 @@ func ReadRes(c *net.UDPConn) {
 		} else if string(method) == "login:" {
 			fmt.Println(string(buffer))
 			var playerid route_structs.PlayerID
-			json.Unmarshal(buffer[idx:n], &playerid)
+			json.Unmarshal(buffer[idx:n], &playerid) // todo: only set player id if there isnt an error. error checking
 			go VerifyOnline(c, playerid.Id)
 		} else {
 			if n > 0 {

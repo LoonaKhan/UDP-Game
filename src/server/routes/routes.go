@@ -167,19 +167,20 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		err_handling.Handle(err)
 
 		var plr p.Player
-		db.Conn.First(&plr, "name = ?", req["name"]) // todo: handle this.
+		if db.Conn.First(&plr, "name = ?", req["name"]).Error != nil { // if no record is found
+			res := nu.FormatRes(rs.Response{Err: "Login refused. Specified player does not exist"}, header)
+			conn.WriteToUDP(res, addr)
+			return
+		}
 
-		// checks if the player is mapped to any addy already
-		// if so, deny the request
-		// if not, check if that address is mapped to any player
-		if a.PlayerExists(plr) { // todo: make sure this gives the right errors
+		// checks if the player is already logged in
+		if a.PlayerExists(plr) {
 			res := nu.FormatRes(rs.Response{Err: "Login refused. Specified player is logged in already"}, header)
 			conn.WriteToUDP(res, addr)
 			return
 		}
 
-		// if the player and addy each are not mapped
-		// map em together
+		// if the player exists and isnt already logged in, map em together
 		a.Insert(plr, addr)
 		res := nu.FormatRes(rs.PlayerID{Id: plr.ID}, header)
 		conn.WriteToUDP(res, addr)
@@ -200,6 +201,8 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		err := json.Unmarshal(buffer, &data)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
+
+		// todo: also verify if the player is logged in?
 
 		// verify if the client owns that player
 		var plr p.Player
