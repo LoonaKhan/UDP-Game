@@ -45,33 +45,27 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		conn.WriteToUDP(res, addr)
 	},
 
-	"post_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
+	"post_chunk:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
 		/*
-				when a player posts chunk updates,
-				  update
-				  also send those updates to all clients currently connected
-				  via handshakes
-					so no get chunks method
-
-			todo: only allow chunks that arent alreay created
+			Creates a chunk.
+			Only creates the chunk if it does not already exist
 		*/
 
 		// accepts user data
-		var span rs.ChunkSpan
-		err := json.Unmarshal(buffer, &span)
+		var chunk c.Chunk
+		err := json.Unmarshal(buffer, &chunk)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
-		// adds all chunks into the database
-		for c := range span.Chunks {
-			db.Conn.Create(&span.Chunks[c])
+		if db.Conn.First(&c.Chunk{}, "x = ? AND y = ?", chunk.X, chunk.Y).Error == nil { // if no record is found
+			res := nu.FormatRes(rs.Response{Err: "Chunk not created. Chunk already exists"}, header)
+			conn.WriteToUDP(res, addr)
+			return
+		} else {
+			db.Conn.Create(&chunk)
 		}
 
-		// responds
-		res_data := map[string]string{
-			"msg": "Recieved",
-		}
-		res := nu.FormatRes(res_data, header)
+		res := nu.FormatRes(rs.Response{Msg: "Chunk Created."}, header)
 		conn.WriteToUDP(res, addr)
 	},
 
