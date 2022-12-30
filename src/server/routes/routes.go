@@ -124,7 +124,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		defer UDPRespondErr("Unable to update position", conn, addr, header)
 		err_handling.Handle(db.Conn.Model(&p.Player{}).
-			Where("id = ?", coords.ID).
+			//Where("id = ?", coords.ID). // todo: id here is the players credentials
 			Updates(p.Player{X: coords.Coords[0], Y: coords.Coords[1]}).Error,
 		)
 
@@ -137,23 +137,17 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 	},
 
 	"post_player:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
-		// takes in a player struct
-		// todo: ensure only certain fields are filled? id needs to be null
-		// 		maybe make a barebones player type they have to use and gets converted to regular player?
-		//		ensure player name is unique
+		// takes in a player name and creates the player if they dont already exist
 
-		var plr p.Player
+		var plr map[string]string
 		err := json.Unmarshal(buffer, &plr)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
 		defer UDPRespondErr("Unable to create player", conn, addr, header)
-		err_handling.Handle(db.Conn.Create(&plr).Error)
+		err_handling.Handle(db.Conn.Create(&p.Player{Name: plr["name"]}).Error)
 
-		res_data := map[string]string{
-			"msg": "Created",
-		}
-		res := nu.FormatRes(res_data, header)
+		res := nu.FormatRes(rs.Response{Msg: "Created"}, header)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -194,6 +188,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			if !time.Now().After(Addys[plr].Expiry) : expiry.add(time.second)
 
 			we dont need to send data back tho
+			todo: when we add credentials, just use those instead of a body for id's
 		*/
 
 		// decode data

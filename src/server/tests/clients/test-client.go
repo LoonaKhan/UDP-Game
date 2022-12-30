@@ -11,7 +11,7 @@ import (
 // other clients are for specialized purposes.
 
 var calls = map[string]string{
-	"post_player:":        "post_player:" + "{\"name\": \"loona\", \"x\": 20, \"y\": 5}",
+	"post_player:":        "post_player:" + "{\"name\": \"loona\"}",
 	"login:":              "login:" + "{\"name\": \"loona\"}",
 	"update_pos:":         "update_pos:" + "{\"coords\": [10,10], \"id\": 3}",
 	"get_chunks:":         "get_chunks:" + "{\"coords\":[0,0]}",
