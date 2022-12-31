@@ -7,9 +7,6 @@ connects to the server along with other clients.
 the server keeps track of and responds to all of them at the same time.
 test this with 2 seperate clients running a few seconds out of sync
 
-todo: how to keep track of order when Reading?
-	continue to use headers? seperate goroutine?
-
 */
 import (
 	"fmt"

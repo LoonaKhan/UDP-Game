@@ -55,7 +55,7 @@ func ReadRes(c *net.UDPConn, cred *uint) {
 		} else if header.Method == "login" {
 			fmt.Println(string(buffer))
 			var playerid route_structs.PlayerID
-			err := json.Unmarshal(buffer[idx+1:n], &playerid) // todo: only set player id if there isnt an error. error checking
+			err := json.Unmarshal(buffer[idx+1:n], &playerid)
 			if err != nil {
 				fmt.Println(err)
 				continue

@@ -8,8 +8,6 @@ import (
 )
 
 var addys = map[string]*net.UDPAddr{} // all clients are stored here
-// todo: remove disconnected ones?
-// 	goroutine that continuously check them? or when we respond to anyone, we dial them first.
 
 func main() {
 	port := ":4001"
