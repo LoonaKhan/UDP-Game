@@ -7,9 +7,11 @@ import (
 	"time"
 )
 
+var cred1 uint
+
 var calls1 = map[string]string{
-	"post_player:": "post_player:" + "{\"name\": \"mon\", \"x\": 2000, \"y\": 5}",
-	"login:":       "login:" + "{\"name\": \"mon\"}",
+	"post_player": "{\"method\":\"post_player\"}" + "|" + "{\"name\": \"mon\"}",
+	"login":       "{\"method\":\"login\"}" + "|" + "{\"name\": \"mon\"}",
 }
 
 /*
@@ -19,7 +21,7 @@ posts a player, logs in, and then simply lies in render distance and waits for u
 
 func main() {
 	CONN := "localhost:4000"
-	name := "mon"
+	//name := "mon"
 	//coords := []int{20, 5}
 
 	// connection
@@ -33,16 +35,15 @@ func main() {
 	defer c.Close()
 
 	// this reads all responses
-	go methods.ReadRes(c)
+	go methods.ReadRes(c, &cred1)
 
 	// posts player data
-	c.Write([]byte(calls1["post_player:"]))
+	c.Write([]byte(calls1["post_player"]))
 
 	time.Sleep(1 * time.Second)
 
 	// logs the player in
-	login := fmt.Sprintf("login:{\"name\": \"%s\"}", name)
-	c.Write([]byte(login))
+	c.Write([]byte(calls1["login"]))
 
 	time.Sleep(100 * time.Second)
 }

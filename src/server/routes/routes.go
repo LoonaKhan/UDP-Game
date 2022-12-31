@@ -91,12 +91,17 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
+		// checks if the chunk exists
+		if db.Conn.First(&c.Chunk{}, "x = ? AND y = ?", updated.Chunk.X, updated.Chunk.Y).Error != nil {
+			res := nu.FormatRes(rs.Response{Err: "Unable to update chunk. chunk does not exist."}, header)
+			conn.WriteToUDP(res, addr)
+			return
+		}
+
 		// update the database
-		defer UDPRespondErr("Unable to update chunk.", conn, addr, header)
-		err_handling.Handle(db.Conn.Model(&c.Chunk{}).
+		db.Conn.Model(&c.Chunk{}).
 			Where("x = ? AND y = ?", updated.Chunk.X, updated.Chunk.Y).
-			Update("blocks", &updated.Chunk.Blocks).Error,
-		)
+			Updates(c.Chunk{Blocks: updated.Chunk.Blocks})
 
 		// finds all addys within render distance and updates them
 		// should fetch all players beforehand. find if they addys match
