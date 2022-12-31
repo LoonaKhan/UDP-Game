@@ -1,13 +1,9 @@
-another attempt at minecraft
-
 go server for all the requests
-    the actual routes
-        post chunk updates
-    including/verifying noise on server end?
-    every request(that moves plr or updates world) does idle checks
-        kiks idle plyers. resets a countdown of about 10 mins
+    post_chunk_updates ignores the player who sent data
+    prevents players from moving faster than legally possible
     security/optimizations
         tick system(TPS)?
+        ignores ddosing stuffs
 
 
 cpp client
