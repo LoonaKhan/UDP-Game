@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	a "server/addys"
 	"server/conf"
@@ -14,12 +15,15 @@ import (
 	"time"
 )
 
-var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string){
-	"get_chunks:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
+var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header){
+	"get_chunks": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		/*
 			User submits their coordinates,
 			server sends back all existing chunks as well as the top-left and bottom-right coords of the chunk span
 		*/
+		if !(a.Matches(header.Cred, addr)) { // client credentials must match
+			return
+		}
 
 		// accepts the user data
 		var coords rs.PlayerCoords
@@ -45,11 +49,14 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		conn.WriteToUDP(res, addr)
 	},
 
-	"post_chunk:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
+	"post_chunk": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		/*
 			Creates a chunk.
 			Only creates the chunk if it does not already exist
 		*/
+		if !(a.Matches(header.Cred, addr)) { // client credentials must match
+			return
+		}
 
 		// accepts user data
 		var chunk c.Chunk
@@ -69,14 +76,15 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		conn.WriteToUDP(res, addr)
 	},
 
-	"post_chunk_updates:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
+	"post_chunk_updates": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		/*
-			* player sends in a chunk that has been updated.
-			* server updates that chunk and sets it to all players within render distance of that chunk.
-			todo: only needs a single block to be updated?
-				saves bandwidth for each update.
-				updates happen too frequently?
-			* */
+		* player sends in a chunk that has been updated.
+		* server updates that chunk and sets it to all players within render distance of that chunk.
+		* */
+		if !(a.Matches(header.Cred, addr)) { // client credentials must match
+			fmt.Println("denied")
+			return
+		}
 
 		var updated = rs.UpdatedChunk{}
 		err := json.Unmarshal(buffer, &updated)
@@ -84,7 +92,11 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		err_handling.Handle(err)
 
 		// update the database
-		db.Conn.Update("blocks", &updated.Chunk)
+		defer UDPRespondErr("Unable to update chunk.", conn, addr, header)
+		err_handling.Handle(db.Conn.Model(&c.Chunk{}).
+			Where("x = ? AND y = ?", updated.Chunk.X, updated.Chunk.Y).
+			Update("blocks", &updated.Chunk.Blocks).Error,
+		)
 
 		// finds all addys within render distance and updates them
 		// should fetch all players beforehand. find if they addys match
@@ -103,19 +115,26 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// retrieve those players
 		db.Conn.Find(&plrs, "id IN ?", plrIds)
 
+		res_header := rs.Header{Method: header.Method}
+		marshalled_head, _ := json.Marshal(res_header)
+		res := []byte(fmt.Sprintf("%s|%s", string(marshalled_head), string(buffer)))
 		// check if in render distance. if so, update them
 		for plr := range plrs { // todo: ignores current player
 			plrChunk := c.ToChunkCoords([]int{plrs[plr].X, plrs[plr].Y})
 			if c.IsInRenderDist([]int{updated.Chunk.X, updated.Chunk.Y}, plrChunk) {
-				conn.WriteToUDP(buffer, addys[plrs[plr].ID].Addy) // todo: use a different header?
+				conn.WriteToUDP(res, addys[plrs[plr].ID].Addy)
 			}
 		}
 	},
 
-	"update_pos:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
+	"update_pos": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		// todo: Does not allow the player to move faster than the max speed. if they do, only move them by max speed
 		// accepts a position formatted as an array
 		// updates it on the server
+
+		if !(a.Matches(header.Cred, addr)) { // client credentials must match
+			return
+		}
 
 		var coords rs.PlayerCoords
 		err := json.Unmarshal(buffer, &coords)
@@ -124,7 +143,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		defer UDPRespondErr("Unable to update position", conn, addr, header)
 		err_handling.Handle(db.Conn.Model(&p.Player{}).
-			//Where("id = ?", coords.ID). // todo: id here is the players credentials
+			Where("id = ?", header.Cred).
 			Updates(p.Player{X: coords.Coords[0], Y: coords.Coords[1]}).Error,
 		)
 
@@ -136,7 +155,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 	},
 
-	"post_player:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
+	"post_player": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		// takes in a player name and creates the player if they dont already exist
 
 		var plr map[string]string
@@ -151,9 +170,10 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		conn.WriteToUDP(res, addr)
 	},
 
-	"login:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
+	"login": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		// client sends in player login credentials along with their request
 		// server finds a player in the database with that info
+		// does not require credentials
 
 		var req map[string]string
 		err := json.Unmarshal(buffer, &req)
@@ -168,19 +188,20 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		}
 
 		// checks if the player is already logged in
-		if a.PlayerExists(plr) {
+		if a.Mapped(plr.ID) {
 			res := nu.FormatRes(rs.Response{Err: "Login refused. Specified player is logged in already"}, header)
 			conn.WriteToUDP(res, addr)
 			return
 		}
 
 		// if the player exists and isnt already logged in, map em together
-		a.Insert(plr, addr)
+		header.Cred = plr.ID // sets the credential to the player id
+		a.Insert(plr.ID, addr)
 		res := nu.FormatRes(rs.PlayerID{Id: plr.ID}, header)
 		conn.WriteToUDP(res, addr)
 	},
 
-	"syn:": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header string) {
+	"syn": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		// does the player do this unprompted every sec?
 		/*
 			decode the json data. requires a player
@@ -188,30 +209,18 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			if !time.Now().After(Addys[plr].Expiry) : expiry.add(time.second)
 
 			we dont need to send data back tho
-			todo: when we add credentials, just use those instead of a body for id's
 		*/
 
-		// decode data
-		var data map[string]uint
-		err := json.Unmarshal(buffer, &data)
-		defer UDPRespondErr("Invalid request data", conn, addr, header)
-		err_handling.Handle(err)
-
-		// todo: also verify if the player is logged in?
-
 		// verify if the client owns that player
-		var plr p.Player
-		db.Conn.First(&plr, "id = ?", data["pid"])
-		if !(a.AddyMatch(plr, addr)) {
+		if !(a.Matches(header.Cred, addr)) {
 			return
 		}
 
 		// extend time
-		//client := addys.Addys[plr]
 		addys := <-a.AddyChan
-		if !time.Now().After(addys[plr.ID].Expiry) { // increase it to no more than 5 seconds from now
-			addys[plr.ID] = a.Client{
-				Addy:   addys[plr.ID].Addy,
+		if !time.Now().After(addys[header.Cred].Expiry) { // increase it to no more than 5 seconds from now
+			addys[header.Cred] = a.Client{
+				Addy:   addys[header.Cred].Addy,
 				Expiry: time.Now().Add(conf.TIMEOUT * time.Second),
 			}
 		}
@@ -221,7 +230,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 }
 
 // another response function which is like recover, but it Writes to UDP the argument u send it
-func UDPRespondErr(msg string, conn *net.UDPConn, addr *net.UDPAddr, header string) { // recovers a thread and sends a response to the client
+func UDPRespondErr(msg string, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) { // recovers a thread and sends a response to the client
 	if r := recover(); r != nil {
 		res := nu.FormatRes(rs.Response{Err: msg}, header)
 		conn.WriteToUDP(res, addr)

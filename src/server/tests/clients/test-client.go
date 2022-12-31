@@ -10,13 +10,19 @@ import (
 // meant for general testing purposes.
 // other clients are for specialized purposes.
 
+var cred uint
+
 var calls = map[string]string{
-	"post_player:":        "post_player:" + "{\"name\": \"loona\"}",
-	"login:":              "login:" + "{\"name\": \"loona\"}",
-	"update_pos:":         "update_pos:" + "{\"coords\": [10,10], \"id\": 3}",
-	"get_chunks:":         "get_chunks:" + "{\"coords\":[0,0]}",
-	"post_chunk:":         "post_chunk:" + "{\"chunks\": {\"x\": 0, \"y\": 0}}",
-	"post_chunk_updates:": "post_chunk_updates:" + "{\"chunk\":{\"x\":0, \"y\":0}}",
+	"post_player":        "{\"method\":\"post_player\"}" + "|" + "{\"name\": \"loona\"}",
+	"login":              "{\"method\":\"login\"}" + "|" + "{\"name\": \"loona\"}",
+	"update_pos":         "{\"method\":\"update_pos\", \"cred\":%d}" + "|" + "{\"coords\": [10,10]}",
+	"get_chunks":         "{\"method\":\"get_chunks\", \"cred\":%d}" + "|" + "{\"coords\":[0,0]}",
+	"post_chunk":         "{\"method\":\"post_chunk\", \"cred\":%d}" + "|" + "{\"chunks\": {\"x\": 0, \"y\": 0}}",
+	"post_chunk_updates": "{\"method\":\"post_chunk_updates\", \"cred\":%d}" + "|" + "{\"chunk\":{\"x\":0, \"y\":0}}",
+}
+
+func caller(method string, cred *uint) string {
+	return fmt.Sprintf(method, *cred)
 }
 
 func main() {
@@ -33,7 +39,7 @@ func main() {
 	defer c.Close()
 
 	// reads all responses incoming in a seperate thread
-	go methods.ReadRes(c)
+	go methods.ReadRes(c, &cred)
 
 	// asks the user what requests theyd like to make
 	for {
@@ -46,7 +52,13 @@ func main() {
 		}
 
 		// send
-		_, err = c.Write([]byte(calls[call]))
+		if call == "post_player" || call == "login" {
+			_, err = c.Write([]byte(calls[call]))
+		} else {
+			req := caller(calls[call], &cred)
+			fmt.Println(req)
+			_, err = c.Write([]byte(req))
+		}
 	}
 
 }

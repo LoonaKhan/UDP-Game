@@ -31,3 +31,8 @@ type PlayerID struct { // used for responding to login requests
 type UpdatedChunk struct { // used by chunk update requests
 	Chunk chunks.Chunk `json:"chunk"`
 }
+
+type Header struct { // our header to display what method we want to call and the credentials
+	Method string `json:"method"`
+	Cred   uint   `json:"cred"`
+}

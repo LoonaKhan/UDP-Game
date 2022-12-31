@@ -37,27 +37,30 @@ Because multiple threads will be writing to this map, it needs to be thread safe
 */
 var AddyChan = make(chan map[uint]Client, 1) /*w*/ // < ohayo nii san watashi wa addy-channn desu
 
-func Insert(plr p.Player, addy *net.UDPAddr) { // adds a player/client keypair
+func Insert(id uint, addy *net.UDPAddr) { // adds a player/client keypair
 	c := Client{Addy: addy, Expiry: time.Now().Add(conf.TIMEOUT * time.Second)}
 	addys := <-AddyChan
-	addys[plr.ID] = c
+	addys[id] = c
 	AddyChan <- addys
 }
 
-func PlayerExists(plr p.Player) bool { // checks if a player is already mapped
+func Mapped(id uint) bool { // checks if a player is already mapped
 	addys := <-AddyChan
-	_, exists := addys[plr.ID]
+	_, exists := addys[id]
 	AddyChan <- addys
 	return exists
 }
 
-func AddyMatch(plr p.Player, addy *net.UDPAddr) bool {
+func Matches(id uint, addy *net.UDPAddr) bool {
 	// used to check if a client is logged in and using the right player.
 	// used upon any request
-	//fmt.Println(Addys[plr.ID].Addy, " = ", addy, "=", (Addys[plr.ID].Addy.IP.Equal(addy.IP) && Addys[plr.ID].Addy.Port == addy.Port))
 	addys := <-AddyChan
 	AddyChan <- addys
-	return (addys[plr.ID].Addy.IP.Equal(addy.IP) && addys[plr.ID].Addy.Port == addy.Port)
+	if Mapped(id) {
+		return (addys[id].Addy.IP.Equal(addy.IP) && addys[id].Addy.Port == addy.Port)
+	} else {
+		return false
+	}
 }
 
 func Disconnect(id uint, addys *map[uint]Client) {
@@ -101,7 +104,7 @@ func VerifyOnline(conn *net.UDPConn) {
 
 			// sends them to all clients
 			for _, client := range addys {
-				conn.WriteToUDP([]byte(fmt.Sprintf("players:%s", res_str)), client.Addy)
+				conn.WriteToUDP([]byte(fmt.Sprintf("{\"method\":\"players\"}|%s", res_str)), client.Addy)
 			}
 		}
 		AddyChan <- addys

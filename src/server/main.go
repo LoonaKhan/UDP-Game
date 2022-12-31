@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -12,6 +13,7 @@ import (
 	p "server/db/models/players"
 	"server/err_handling"
 	"server/routes"
+	rs "server/routes/route_structs"
 	"strings"
 )
 
@@ -21,14 +23,21 @@ intakes a user's position
 based on that position, determine which chunks to load
 */
 
-func parseHeader(buffer []byte) (method []byte, idx int, err error) { // error handle for no semi colons
-	idx = strings.Index(string(buffer), ":") + 1 // dont use a colon as that is used in json.
-	method = buffer[:idx]
-	if idx == -1 {
-		return method, idx, errors.New("semicolon not found")
+func parseReq(buffer []byte) (header rs.Header, idx int, err error) { // ensures the index and headers are valid
+	idx = strings.Index(string(buffer), "|") // maybe dont use a colon as that is used in json.
+	if idx == -1 {                           // colon not found
+		return header, idx, errors.New("'|' not found")
 	}
-	//fmt.Printf(string(method))
-	return method, idx, nil
+
+	// parses header
+	header_buff := buffer[:idx]
+	err = json.Unmarshal(header_buff, &header)
+	if err != nil { // header invalid
+		fmt.Println(err)
+		return header, idx, err
+	}
+
+	return header, idx, nil
 }
 
 func main() {
@@ -60,12 +69,13 @@ func main() {
 		err_handling.Handle(err)
 
 		// ensures the request is formatted properly
-		header, idx, err := parseHeader(buffer) // headers and body need to be seperated by a semicolon
-		if err != nil {                         // if no semicolon is detected, ignore the request
+		header, idx, err := parseReq(buffer) // headers and body need to be seperated by a semicolon
+		if err != nil {                      // if no semicolon is detected, ignore the request
+			fmt.Println("bad header")
 			continue
 		}
-		if _, exists := routes.Methods[string(header)]; exists { // ensures the header is valid
-			go routes.Methods[string(header)](buffer[idx:n], conn, addr, string(header))
+		if _, exists := routes.Methods[header.Method]; exists { // ensures the header is valid
+			go routes.Methods[header.Method](buffer[idx+1:n], conn, addr, header)
 		}
 	}
 
