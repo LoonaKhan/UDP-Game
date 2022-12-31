@@ -1,4 +1,4 @@
-go server for all the requests
+go server:
     post_chunk_updates ignores the player who sent data
     prevents players from moving faster than legally possible
     security/optimizations
@@ -6,7 +6,7 @@ go server for all the requests
         ignores ddosing stuffs
 
 
-cpp client
+cpp client:
     test client
         udp with zmq?
         send additional string bytes in a request
