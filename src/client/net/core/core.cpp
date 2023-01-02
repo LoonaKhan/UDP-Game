@@ -2,7 +2,7 @@
 // Created by loona on 31/12/22.
 //
 
-#include "requests.h"
+#include "core.h"
 #include "iostream"
 
 net::UDPConn::UDPConn(char *host, uint port) {
@@ -18,11 +18,11 @@ net::UDPConn::UDPConn(char *host, uint port) {
     this->addr_len = sizeof(addr);
 }
 
-void net::UDPConn::close() { //todo: make this a deconstructor
-    ::close(this->sock);
+net::UDPConn::~UDPConn() {
+    close(this->sock);
 }
 
-ssize_t net::UDPConn::send(char *buffer, int buffer_len) {
+ssize_t net::UDPConn::send(const char *buffer, int buffer_len) {
     return sendto(this->sock, buffer, buffer_len, 0, (struct sockaddr *)&this->addr, this->addr_len);
 }
 

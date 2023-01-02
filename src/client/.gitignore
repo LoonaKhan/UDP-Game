@@ -1,4 +1,7 @@
 cmake-build-debug
 build
+fmt
 net/zmq/
 *.out
+/fmt/
+/tests/bin/

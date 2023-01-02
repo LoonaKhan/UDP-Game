@@ -19,10 +19,10 @@ namespace net {
     public:
         UDPConn(char *host, uint port);
 
-        ssize_t send(char buffer[], int buffer_len);
+        ~UDPConn();
+
+        ssize_t send(const char buffer[], int buffer_len);
 
         ssize_t recieve(char buffer[], int buffer_len);
-
-        void close();
     };
 }

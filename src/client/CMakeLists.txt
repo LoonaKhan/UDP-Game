@@ -3,7 +3,14 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project(CLIENT)
 
-add_executable(${PROJECT_NAME} main.cpp net/requests/requests.cpp net/requests/requests.h)
-add_executable(test_client tests/test-requests.cpp net/macros/macros.cpp net/macros/macros.h)
+set(TEST_CLIENT test_client)
 
-target_link_libraries(test_client net)
+add_executable(${PROJECT_NAME} main.cpp net/core/core.cpp net/core/core.h)
+add_executable(${TEST_CLIENT} tests/test-requests.cpp net/macros/macros.cpp net/macros/macros.h net/parser/parser.cpp net/parser/parser.h)
+
+
+# libraries
+add_subdirectory(fmt)
+
+target_link_libraries(${TEST_CLIENT} net)
+target_link_libraries(${TEST_CLIENT} fmt::fmt)
