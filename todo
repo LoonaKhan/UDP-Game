@@ -8,9 +8,10 @@ go server:
 
 cpp client:
     test client
-        udp with zmq?
-        send additional string bytes in a request
+        implement each call using macros
+        parser
         requests every tick instead of frame
+    printing library?
     routes and communications with the server
     perlin noise testing
     multithreading review

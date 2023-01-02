@@ -12,19 +12,12 @@ int main() {
 
     char bufferReq[] = "{\"method\":\"post_player\"}|{\"name\": \"mon\"}";
     char bufferRes[1024] = {0};
-    int sock;
 
-    if ((sock = net::UDPSock()) < 0) {
-        std::cout << "cant creat socket\n";
-        exit(-1);
-    }
-    auto server = net::setUDPAddr(HOST, PORT);
+    auto c = net::UDPConn(HOST, PORT);
 
-    //auto bytesSent = sendto(sock, bufferReq, sizeof(bufferReq)-1, 0, (struct sockaddr *)&server, sizeof(server));
-    auto bytesSent = net::send(sock, bufferReq, sizeof(bufferReq)-1,(struct sockaddr *)&server, sizeof(server));
-    std::cout << bytesSent << " bytes sent\n";
+    auto bytesSent = c.send(bufferReq, sizeof(bufferReq)-1);
+    std::cout << "bytes sent: " << bytesSent << std::endl;
 
-    auto bytesRecv = net::recieve(sock, bufferRes);
-    std::cout << bytesRecv << " bytes recieved\n";
-
+    auto bytesRecv = c.recieve(bufferRes, sizeof(bufferRes));
+    std::cout << bytesRecv << " bytes recieved\n" << "buffer: " << bufferRes;
 }
