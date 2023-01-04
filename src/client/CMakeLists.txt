@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.22.1)
-
+set(CMAKE_CXX_STANDARD 17)
 
 project(CLIENT)
-
 set(TEST_CLIENT test_client)
 
 add_executable(${PROJECT_NAME} main.cpp net/core/core.cpp net/core/core.h)

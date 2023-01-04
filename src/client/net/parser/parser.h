@@ -5,8 +5,10 @@
 #pragma once
 
 #include <nlohmann/json.hpp>
+#include <string>
 
 using json =  nlohmann::json;
+
 
 namespace net {
     int seperate(char buffer[], char substr);

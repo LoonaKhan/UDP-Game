@@ -3,21 +3,39 @@
 //
 
 
-#include <requests.h>
-#include <iostream>
+#include <core.h>
+#include <fmt/core.h>
+#include <thread>
+
+#include "../net/macros/macros.h"
+
+using namespace std::chrono;
+using namespace std::this_thread; // sleep_for, sleep_until
 
 int main() {
+
+    // our requests
+    char post_player[] = "{\"method\":\"post_player\"}|{\"name\": \"mon\"}";
+    char login[] = "{\"method\":\"login\"}|{\"name\": \"mon\"}";
+
+    // setup connection
     char HOST[] = "127.0.0.1";
     int PORT  = 4000;
+    int cred;
+    auto c = net::UDPConn(HOST, PORT); // connect
 
-    char bufferReq[] = "{\"method\":\"post_player\"}|{\"name\": \"mon\"}";
-    char bufferRes[1024] = {0};
+    // start listening
+    std::thread listener(net::readRes, std::ref(c), std::ref(cred));
 
-    auto c = net::UDPConn(HOST, PORT);
+    // send requests
+    auto bytesSent = c.send(post_player, sizeof(post_player)-1);
+    fmt::print("{} Bytes sent\n", bytesSent);
 
-    auto bytesSent = c.send(bufferReq, sizeof(bufferReq)-1);
-    std::cout << "bytes sent: " << bytesSent << std::endl;
+    bytesSent = c.send(login, sizeof(login)-1);
+    fmt::print("{} Bytes sent\n", bytesSent);
 
-    auto bytesRecv = c.recieve(bufferRes, sizeof(bufferRes));
-    std::cout << bytesRecv << " bytes recieved\n" << "buffer: " << bufferRes;
+    // for loop for the game
+    for (;;) {
+        continue;
+    }
 }
