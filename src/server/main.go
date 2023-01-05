@@ -68,6 +68,10 @@ func main() {
 		n, addr, err := conn.ReadFromUDP(buffer)
 		err_handling.Handle(err)
 
+		if conf.DEBUG {
+			fmt.Println(string(buffer))
+		}
+
 		// ensures the request is formatted properly
 		header, idx, err := parseReq(buffer) // headers and body need to be seperated by a semicolon
 		if err != nil {                      // if no semicolon is detected, ignore the request

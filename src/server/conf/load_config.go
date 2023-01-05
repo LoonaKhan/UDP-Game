@@ -12,6 +12,7 @@ type Conf struct {
 	DB_file         string        `json:"DB_FILE"`
 	MEM             string        `json:"MEM"`
 	TIMEOUT         time.Duration `json:"TIMEOUT"`
+	DEBUG           bool          `json:"debug"`
 }
 
 var Config = json_utils.ReadJsonFile[Conf]("./conf/config.json")
@@ -21,3 +22,4 @@ var PORT = Config.PORT
 var DB = Config.DB_file
 var MEM = Config.MEM
 var TIMEOUT = Config.TIMEOUT
+var DEBUG = Config.DEBUG

@@ -6,7 +6,12 @@
 - A whole lotta hydrogen, dark energy and about 14 billion years
 - Server:
   - a working go compiler, all dependencies are managed by the go.mod
-
+- Client:
+  - C++ 17
+  - CMake 3.22.1
+  - {fmt}
+  - nlohmann/json
+  - will probably do this in a bash script
 
 
 
