@@ -8,6 +8,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string>
+#include <cstring>
+#include <iostream>
 
 namespace net {
 
@@ -21,7 +23,7 @@ namespace net {
 
         ~UDPConn();
 
-        ssize_t send(const char buffer[], int buffer_len);
+        ssize_t send(std::string req);
 
         ssize_t recieve(char buffer[], int buffer_len);
     };

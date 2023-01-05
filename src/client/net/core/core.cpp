@@ -22,8 +22,12 @@ net::UDPConn::~UDPConn() {
     close(this->sock);
 }
 
-ssize_t net::UDPConn::send(const char *buffer, int buffer_len) {
-    return sendto(this->sock, buffer, buffer_len, 0, (struct sockaddr *)&this->addr, this->addr_len);
+ssize_t net::UDPConn::send(std::string req) {
+    char *buffer = new char[req.length()+1];
+    strcpy(buffer, req.c_str());
+    auto ret =  sendto(this->sock, buffer, strlen(buffer), 0, (struct sockaddr *)&this->addr, this->addr_len);
+    delete[] buffer;
+    return ret;
 }
 
 ssize_t net::UDPConn::recieve(char *buffer, int buffer_len) {
