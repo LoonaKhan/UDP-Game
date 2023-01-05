@@ -9,7 +9,7 @@ void net::verifyOnline(net::UDPConn &c, int id) { // continuously pings the serv
     for (;;){
         sleep_for(seconds(4)); // set this to the globvars
         auto req = "{"+fmt::format("\"method\":\"syn\", \"cred\":{}", id)+"}|{}";
-        c.send(req.c_str(), sizeof(req)-1);
+        c.send(req);
     }
 }
 
@@ -44,6 +44,6 @@ void net::readRes(net::UDPConn &c, int &cred) { // reads and handle the response
                 fmt::print("err: {}", errmsg);
             }
         }
-        fmt::print("response: {}\n", (std::string)buffer);
+        if (header["method"] != "players") fmt::print("response: {}\n", (std::string)buffer);
     }
 }
