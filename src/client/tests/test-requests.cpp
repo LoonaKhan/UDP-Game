@@ -24,10 +24,11 @@ int main() {
     char HOST[] = "127.0.0.1";
     int PORT  = 4000;
     int cred;
+    bool logged_in;
     auto c = net::UDPConn(HOST, PORT); // connect
 
     // start listening
-    std::thread listener(net::readRes, std::ref(c), std::ref(cred));
+    std::thread listener(net::readRes, std::ref(c), std::ref(cred), std::ref(logged_in));
 
     // send requests
     auto bytesSent = c.send(post_player);
@@ -36,12 +37,28 @@ int main() {
     bytesSent = c.send(login);
     fmt::print("{} Bytes sent\n", bytesSent);
 
-    int coords[] = {10,10};
-    bytesSent = c.send(net::update_pos(cred, coords)); // todo: does not update cred
-    fmt::print("{} Bytes sent\n", bytesSent);
+    /* wait a while for the other thread to recieve the login request.
+    todo: have a login bool var. if true, continue with the rest of the game
+        wait until we are logged in to start rendering
+     */
 
     // for loop for the game
     for (;;) {
-        continue;
+        if (logged_in){
+            std::string method;
+            fmt::print("enter which method you would like to call\n");
+            std::cin >> method;
+
+            if (method == "update_pos") {
+                int coords[] = {10, 10};
+                bytesSent = c.send(net::update_pos(cred, coords));
+                fmt::print("{} Bytes sent\n", bytesSent);
+            }
+            else if (method == "get_chunks") {
+                int chunk_coords[] = {0,0};
+                bytesSent = c.send(net::get_chunks(cred, chunk_coords));
+                fmt::print("{} Bytes sent\n", bytesSent);
+            }
+        }
     }
 }

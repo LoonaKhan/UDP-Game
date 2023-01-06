@@ -18,8 +18,8 @@ using json = nlohmann::json;
 namespace net {
     void verifyOnline(net::UDPConn &c, int id);
 
-    void readRes(net::UDPConn &c, int &cred);
+    void readRes(net::UDPConn &c, int &cred, bool &logged_in);
 
-    void updateCred(int id, int &cred);
+    void updateCred(int id, int &cred, bool &logged_in);
 
 }
