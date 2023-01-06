@@ -64,7 +64,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
-		if db.Conn.First(&c.Chunk{}, "x = ? AND y = ?", chunk.X, chunk.Y).Error == nil { // if no record is found
+		if db.Conn.First(&c.Chunk{}, "x = ? AND y = ?", chunk.X, chunk.Y).Error == nil { // if a record is found
 			res := nu.FormatRes(rs.Response{Err: "Chunk not created. Chunk already exists"}, header)
 			conn.WriteToUDP(res, addr)
 			return

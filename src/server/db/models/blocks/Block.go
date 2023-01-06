@@ -7,7 +7,7 @@ import (
 type Block struct {
 	gorm.Model
 
-	// these coords are relative to their block
+	// these coords are relative to their chunk
 	X int `json:"x"`
 	Y int `json:"y"`
 
