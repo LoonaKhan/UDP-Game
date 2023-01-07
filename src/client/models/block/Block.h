@@ -28,14 +28,34 @@ namespace block {
          * */
         Block(int coords[2], int chunk_coords[2], double colour_noise=0, double height_noise=0);
 
-        Block();
+        Block(); // this constructor only exists because member init lists wouldnt recognize the other constructors???
 
+        // json constructor for when we recieve chunks and blocks from the server
         Block(json d, int chunk_coords[]);
 
 
          void render(); // renders the block to the screen
 
          json toJson(); // for when we want to package it
+
+
+         // getters
+
+         int* getCoords() {
+             return this->coords;
+         }
+
+         int* getChunkCoords() {
+             return this->chunk_coords;
+         }
+
+         double getColour() {
+             return this->colour_noise;
+         }
+
+         double getHeight() {
+             return this->height_noise;
+         }
 
     private: // priv methods
 

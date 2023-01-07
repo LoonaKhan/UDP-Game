@@ -30,9 +30,23 @@ namespace chunk {
         // constructor for recieving chunks from the server
         Chunk(json d);
 
-        ~Chunk();
-
         json toJson();
+
+        // getters
+        int* getCoords() {
+            return this->coords;
+        }
+
+        block::Block* getBlocks() {
+            return this->blocks;
+        }
+
+        block::Block getBlock(int coords[]) {
+            for (auto& b : this->blocks) {
+                if (b.getCoords()[0] == coords[0] && b.getCoords()[1] == coords[1])
+                    return b;
+            }
+        }
 
     private: // methods
 
