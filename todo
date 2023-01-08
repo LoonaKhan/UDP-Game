@@ -1,8 +1,15 @@
 go server:
     reqrite post_chunks, get_chunks and post_chunk_updates methods
         send/recieve as binary data  
+        get_chunks:
+            1 chunk at a time?
+            client knows their render_dist, asks for each chunk seperately
     post_chunk_updates ignores the player who sent data
     prevents players from moving faster than legally possible
+    seed for each world
+        randomly determined by the server on first start?
+    fix db locking
+        retrys if locked? detect which error ur getting
     security/optimizations
         tick system(TPS)?
         ignores ddosing stuffs
@@ -13,6 +20,8 @@ cpp client:
         graphics
     routes and communications with the server
     perlin noise testing
+        colour based on: seed, x, y
+        height: seed, x, y, colour      // shrink 4 vars into 1?
     multithreading review
         comm with server
         render
@@ -22,7 +31,10 @@ cpp client:
             mushroom fields, plains, desert, tundra
         height:
             valley, flat, mountains
-    mesh system?
+    cmake: net lib is built upon building any executable
+    seperate home/game screens?
+        if logged_in, show game screen, else home
+        
 
 note:
     on the client side, the player continuously moves and does stuff, meanwhile, it updates the server on another thread and corrects the player if its position is inaccurate
