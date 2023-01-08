@@ -12,21 +12,19 @@ namespace block {
 
     class Block {
     private: // priv attributes
-        int coords[2]; // relative to their chunk
-        int chunk_coords[2]; // coords of the chunk they belong to
-        double colour_noise; // the colour noise value. based on coordinates
-        double height_noise; // their height. based off coordinates and colour
+        char coords[2]; // relative to their chunk
+        char colour,
+        height;
 
     public: // pub attributes
         // the SFML shape
 
     public: // pub methods
         /*
-         * default constructor.
-         * used when the client creates a block
-         * sets coords and determines the noise values
+         * if we are creating a chunk, colour and height are empty as we generate those ourselves.
+         * if we are recieving data from the server, colour and height will already be filled
          * */
-        Block(int coords[2], int chunk_coords[2], double colour_noise=0, double height_noise=0);
+        Block(char coords[2], char colour=0, char height=0);
 
         Block(); // this constructor only exists because member init lists wouldnt recognize the other constructors???
 
@@ -36,28 +34,27 @@ namespace block {
 
          void render(); // renders the block to the screen
 
-         json toJson(); // for when we want to package it
-
-
          // getters
+         int* getIntCoords() { //! returns a static variable. DONT FORGET TO DELETE AFTER
+             static int int_coords[2] = {this->coords[0], this->coords[1]};
+             return int_coords;
+         }
 
-         int* getCoords() {
+         char* getCoords(){
              return this->coords;
          }
 
-         int* getChunkCoords() {
-             return this->chunk_coords;
+         int getColour() {
+             return this->colour;
+         }
+         int getHeight() {
+             return this->height;
          }
 
-         double getColour() {
-             return this->colour_noise;
-         }
-
-         double getHeight() {
-             return this->height_noise;
-         }
 
     private: // priv methods
+
+        void genNoise(char *chunk);
 
     };
 

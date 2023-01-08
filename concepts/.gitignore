@@ -1,0 +1,3 @@
+*.out
+send_binary_data/cmake-build-debug
+send_binary_data/fmt

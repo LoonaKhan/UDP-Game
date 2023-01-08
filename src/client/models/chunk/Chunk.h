@@ -14,7 +14,7 @@ namespace chunk {
     class Chunk {
 
     private: // attributes
-        int coords[2];
+        char coords[2];
         block::Block blocks[256]; // todo: needs to be the same size of chunk_size^2
 
     public: // attributes
@@ -25,23 +25,22 @@ namespace chunk {
          * used when clients create a chunk.
          * sets coords and creates all blocks
          * */
-        Chunk(int coords[2]);
-
-        // constructor for recieving chunks from the server
-        Chunk(json d);
-
-        json toJson();
+        Chunk(char coords[2], block::Block blocks[256]= nullptr);
 
         // getters
-        int* getCoords() {
+        char* getCoords() {
             return this->coords;
         }
 
-        block::Block* getBlocks() {
+        block::Block* getBlocks() { // todo: get this working. needs to return all blocks
             return this->blocks;
         }
 
-        block::Block getBlock(int coords[]) {
+        int getBlocksLen() {
+            return sizeof(this->blocks) / sizeof(this->blocks[0]);
+        }
+
+        block::Block getBlock(char coords[]) {
             for (auto& b : this->blocks) {
                 if (b.getCoords()[0] == coords[0] && b.getCoords()[1] == coords[1])
                     return b;
