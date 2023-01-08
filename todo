@@ -1,4 +1,6 @@
 go server:
+    reqrite post_chunks, get_chunks and post_chunk_updates methods
+        send/recieve as binary data  
     post_chunk_updates ignores the player who sent data
     prevents players from moving faster than legally possible
     security/optimizations
@@ -8,14 +10,7 @@ go server:
 
 cpp client:
     test client
-        implement each call using macros
-        parser
-        requests every tick instead of frame
-        net/
-            core
-            macros
-            parser
-    printing library?
+        graphics
     routes and communications with the server
     perlin noise testing
     multithreading review
@@ -32,3 +27,12 @@ cpp client:
 note:
     on the client side, the player continuously moves and does stuff, meanwhile, it updates the server on another thread and corrects the player if its position is inaccurate
     chunks are a map that are edited on another thread. rendering thread just draws em
+
+post, get chunks and post_chunk_updates(both ways) are all sent in binary.
+    client recieving simply appends to existing chunk data
+
+    server verifies if the address is in Addys
+    and then checks player position.
+        chunk in render dist?
+            yes: update sql
+            no: ignore 
