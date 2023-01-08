@@ -17,7 +17,7 @@ namespace block {
         height;
 
     public: // pub attributes
-        // the SFML shape
+        // the SFML shape. todo: maybe the block shape is seperate and inherits from this class?
 
     public: // pub methods
         /*
@@ -34,9 +34,9 @@ namespace block {
          // getters
          char* getCoords();
 
-         int getColour();
+         [[nodiscard]] char getColour() const;
 
-         int getHeight();
+         [[nodiscard]] char getHeight() const;
 
 
     private: // priv methods

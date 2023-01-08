@@ -20,11 +20,11 @@ namespace block {
         return this->coords;
     }
 
-    int Block::getColour() {
+    char Block::getColour() const {
         return this->colour;
     }
 
-    int Block::getHeight() {
+    char Block::getHeight() const {
         return this->height;
     }
 } // block

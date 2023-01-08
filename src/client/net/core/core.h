@@ -23,8 +23,14 @@ namespace net {
 
         ~UDPConn();
 
+        // sends data
         ssize_t send(std::string req);
 
-        ssize_t recieve(char buffer[], int buffer_len);
+        // recieves data
+        ssize_t recieve(char buffer[], int buffer_len) const;
+
+        // allows a user to send binary data
+        template <typename T>
+        ssize_t send_bin(T data);
     };
 }
