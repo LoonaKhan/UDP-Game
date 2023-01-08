@@ -35,27 +35,22 @@ namespace block {
          void render(); // renders the block to the screen
 
          // getters
-         int* getIntCoords() { //! returns a static variable. DONT FORGET TO DELETE AFTER
-             static int int_coords[2] = {this->coords[0], this->coords[1]};
-             return int_coords;
-         }
+         char* getCoords();
 
-         char* getCoords(){
-             return this->coords;
-         }
+         int getColour();
 
-         int getColour() {
-             return this->colour;
-         }
-         int getHeight() {
-             return this->height;
-         }
+         int getHeight();
 
 
     private: // priv methods
 
         void genNoise(char *chunk);
 
+    };
+
+    struct BlockArray { // since we need an array + it's length, this struct contains both
+        block::Block blocks[256];
+        int len = 256;
     };
 
 } // block

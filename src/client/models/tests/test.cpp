@@ -20,7 +20,7 @@ block::Block blockConstructorTest() {
                "coords: [{}, {}]\n"
                "colour noise: {}\n"
                "height_noise: {}\n",
-               b.getIntCoords()[0], b.getIntCoords()[1],
+               (int)b.getCoords()[0], (int)b.getCoords()[1],
                b.getColour(), b.getHeight());
 
     return b;
@@ -32,9 +32,12 @@ void chunkConstructorTest() {
 
     auto c = chunk::Chunk(coords);
 
-    fmt::print("size: {}", c.getBlocksLen());
+    fmt::print("size: {}\n", c.getBlocksLen());
 
     // can access all blocks from here
+    for (auto&b : c.getBlocks().blocks) {
+        fmt::print("block: [{},{}]\n", (int)b.getCoords()[0], (int)b.getCoords()[1]);
+    }
 }
 
 void chunkGetBlockTest() {
@@ -47,7 +50,7 @@ void chunkGetBlockTest() {
                "coords: [{}, {}]\n"
                "colour noise: {}\n"
                "height_noise: {}\n",
-               b.getIntCoords()[0], b.getIntCoords()[1],
+               (int)b.getCoords()[0], (int)b.getCoords()[1],
                b.getColour(), b.getHeight());
 }
 

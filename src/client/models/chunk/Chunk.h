@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <vector>
 #include <nlohmann/json.hpp>
 #include "../block/Block.h"
 
@@ -28,24 +29,13 @@ namespace chunk {
         Chunk(char coords[2], block::Block blocks[256]= nullptr);
 
         // getters
-        char* getCoords() {
-            return this->coords;
-        }
+        char* getCoords();
 
-        block::Block* getBlocks() { // todo: get this working. needs to return all blocks
-            return this->blocks;
-        }
+        block::BlockArray getBlocks();
 
-        int getBlocksLen() {
-            return sizeof(this->blocks) / sizeof(this->blocks[0]);
-        }
+        int getBlocksLen();
 
-        block::Block getBlock(char coords[]) {
-            for (auto& b : this->blocks) {
-                if (b.getCoords()[0] == coords[0] && b.getCoords()[1] == coords[1])
-                    return b;
-            }
-        }
+        block::Block getBlock(char coords[]);
 
     private: // methods
 

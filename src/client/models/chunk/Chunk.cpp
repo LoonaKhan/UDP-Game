@@ -3,6 +3,7 @@
 //
 
 #include "Chunk.h"
+#include "iostream"
 
 namespace chunk {
 
@@ -24,6 +25,29 @@ namespace chunk {
             }
 
         }
+    }
+
+    block::Block Chunk::getBlock(char *coords)  {
+        for (auto& b : this->blocks) {
+            if (b.getCoords()[0] == coords[0] && b.getCoords()[1] == coords[1])
+                return b;
+        }
+    }
+
+    int Chunk::getBlocksLen() {
+        return sizeof(this->blocks) / sizeof(this->blocks[0]);
+    }
+
+    block::BlockArray Chunk::getBlocks() { //
+        block::BlockArray b_arr;
+        for (int i=0; i<b_arr.len ; i++) {
+            b_arr.blocks[i] = this->blocks[i];
+        }
+        return b_arr;
+    }
+
+    char *Chunk::getCoords(){
+        return this->coords;
     }
 
 } // chunk

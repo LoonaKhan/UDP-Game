@@ -15,4 +15,16 @@ namespace block {
     }
 
     Block::Block() {}
+
+    char *Block::getCoords() {
+        return this->coords;
+    }
+
+    int Block::getColour() {
+        return this->colour;
+    }
+
+    int Block::getHeight() {
+        return this->height;
+    }
 } // block
