@@ -15,7 +15,7 @@ private: // members
 public: // members
 
 public: // methods
-    block(char *coords, char *chunk_coords, char colour= 0, char height= 0) // default to 0 if blank. cn also check if numbers are within bounds
+    block(char *coords, char colour= 127, char height= 126) // default to 0 if blank. cn also check if numbers are within bounds
     :coords{coords[0], coords[1]},
     colour(colour),
     height(height)

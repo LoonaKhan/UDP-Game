@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <iostream>
 #include "block.h"
+#include "chunk.h"
 #include "chrono"
 #include "thread"
 
@@ -18,11 +19,8 @@ using namespace std::this_thread; // sleep_for, sleep_until
 
 int main() {
     char bufferReq[] = "{\"method\":\"post_player\"}|{\"name\": \"mon\"}";
-    char coords[] = {20,20},
-            chunk_coords[] = {40,30},
-            colour = 2,
-            height=1;
-    block b = block(coords, chunk_coords, colour, height);
+    char coords[] = {20,20};
+    chunk c = chunk(coords);
     char bufferRes[1024] = {0};
     int sock;
 
@@ -47,21 +45,23 @@ int main() {
     server.sin_addr.s_addr = inet_addr(HOST); // the host
 
     // send message
-    for (;;){
-        ssize_t reqBytes = sendto(sock,
-                                  &b,
-                                  sizeof(b), // we subtract 1 to remove the terminating character
-                                  0,
-                                  (struct sockaddr *) &server,
-                                  sizeof(server));
-        std::cout << reqBytes << " bytes sent" << std::endl;
-        sleep_for(seconds(1));
-    }
+    /*for (;;){
+
+    }*/
 
     //ssize_t resByte = recv(sock, bufferRes, sizeof(bufferRes), 0);
     //std::cout << resByte << " bytes recieved: " << bufferRes << std::endl;
 
-    //close(sock);
+    ssize_t reqBytes = sendto(sock,
+                              &c,
+                              sizeof(c),
+                              0,
+                              (struct sockaddr *) &server,
+                              sizeof(server));
+    std::cout << reqBytes << " bytes sent" << std::endl;
+    //sleep_for(seconds(1));
+
+    close(sock);
     return 0;
 
 

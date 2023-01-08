@@ -15,10 +15,7 @@ private: // members
 public: // members
 
 public: // methods
-    chunk(char *coords)
-    : coords{coords[0], coords[1]},
-    blocks()
-    {}
+    chunk(char *coords);
 
 private: // methods
 
