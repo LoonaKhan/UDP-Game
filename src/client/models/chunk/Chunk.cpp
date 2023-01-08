@@ -7,23 +7,25 @@
 
 namespace chunk {
 
-    Chunk::Chunk(char *coords, block::Block* blocks)
-    : coords{coords[0], coords[1]},
-    blocks() {
-        int i=0;
-        for (char x=0; x<16; x++){
-            for (char y=0; y<16; y++, i++){
-
-                if (blocks == nullptr) { // if no blocks are given. IE: we are creating these blocks
-                    char p[2]{x,y};
-                    this->blocks[i] = block::Block(p);
-                }
-                else { // if we are recieving data from the server
-                    this->blocks[i] = blocks[i];
-                }
-
+    Chunk::Chunk(char *coords)
+    : coords{coords[0], coords[1]} {
+        int i = 0;
+        for (char x = 0; x < 16; x++) {
+            for (char y = 0; y < 16; y++, i++) {
+                char p[2]{x, y};
+                this->blocks[i] = block::Block(p);
             }
+        }
+    }
 
+    Chunk::Chunk(char *buffer, int len)
+    : coords{buffer[0], buffer[1]} {
+
+        for (int b_idx=2 , i=0; // b_idx is the index of the buffer, i is the index of this->blocks
+                b_idx < len;
+                b_idx+=4, i++) {
+            char b_coords[] = {buffer[b_idx], buffer[b_idx+1]};
+            this->blocks[i] = block::Block(b_coords, buffer[b_idx+2], buffer[b_idx+3]);
         }
     }
 

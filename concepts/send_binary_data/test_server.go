@@ -31,7 +31,7 @@ func main() {
 
 	for {
 		buffer := make([]byte, 1026)
-		_, _, err := conn.ReadFromUDP(buffer) // returns length of read data and address
+		_, addr, err := conn.ReadFromUDP(buffer) // returns length of read data and address
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -47,6 +47,8 @@ func main() {
 			fmt.Printf("block: [%d, %d], c: %d, h: %d\n",
 				c.blocks[b].x, c.blocks[b].y, c.blocks[b].colour, c.blocks[b].height)
 		}
+
+		conn.WriteToUDP(buffer, addr)
 
 	}
 }

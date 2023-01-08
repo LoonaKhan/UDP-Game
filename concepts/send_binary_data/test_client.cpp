@@ -21,7 +21,7 @@ int main() {
     char bufferReq[] = "{\"method\":\"post_player\"}|{\"name\": \"mon\"}";
     char coords[] = {20,20};
     chunk c = chunk(coords);
-    char bufferRes[1024] = {0};
+    char bufferRes[1026] = {0};
     int sock;
 
     // create socket
@@ -45,13 +45,6 @@ int main() {
     server.sin_addr.s_addr = inet_addr(HOST); // the host
 
     // send message
-    /*for (;;){
-
-    }*/
-
-    //ssize_t resByte = recv(sock, bufferRes, sizeof(bufferRes), 0);
-    //std::cout << resByte << " bytes recieved: " << bufferRes << std::endl;
-
     ssize_t reqBytes = sendto(sock,
                               &c,
                               sizeof(c),
@@ -59,7 +52,15 @@ int main() {
                               (struct sockaddr *) &server,
                               sizeof(server));
     std::cout << reqBytes << " bytes sent" << std::endl;
-    //sleep_for(seconds(1));
+    sleep_for(seconds(1));
+
+    ssize_t resByte = recv(sock, bufferRes, sizeof(bufferRes), 0);
+    std::cout << resByte << " bytes recieved: " << std::endl;
+    std::cout << "[ ";
+    for (auto& chr : bufferRes) {
+        std::cout << (int) chr << ", ";
+    }
+    std::cout << "]" << std::endl;
 
     close(sock);
     return 0;

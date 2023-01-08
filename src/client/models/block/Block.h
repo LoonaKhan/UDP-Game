@@ -23,14 +23,11 @@ namespace block {
         /*
          * if we are creating a chunk, colour and height are empty as we generate those ourselves.
          * if we are recieving data from the server, colour and height will already be filled
+         * since all fields are chars, we can use this constructor for both client-created chunks and recieved chunks
          * */
         Block(char coords[2], char colour=0, char height=0);
 
         Block(); // this constructor only exists because member init lists wouldnt recognize the other constructors???
-
-        // json constructor for when we recieve chunks and blocks from the server
-        Block(json d, int chunk_coords[]);
-
 
          void render(); // renders the block to the screen
 

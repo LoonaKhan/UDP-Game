@@ -26,7 +26,15 @@ namespace chunk {
          * used when clients create a chunk.
          * sets coords and creates all blocks
          * */
-        Chunk(char coords[2], block::Block blocks[256]= nullptr);
+        Chunk(char coords[2]);
+
+        /*
+         * Used when we recieve chunks from the server
+         * we recieve a array of buffer(char) from the server,
+         * the first 2 buffer become the chunk coordinates
+         * the rest are used to create the blocks
+         */
+        Chunk(char buffer[], int len);
 
         // getters
         char* getCoords();
