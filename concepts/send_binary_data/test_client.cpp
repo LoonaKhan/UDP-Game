@@ -19,9 +19,9 @@ using namespace std::this_thread; // sleep_for, sleep_until
 
 int main() {
     char bufferReq[] = "{\"method\":\"post_player\"}|{\"name\": \"mon\"}";
-    char coords[] = {20,20};
+    int coords[] = {2147483647,20};
     chunk c = chunk(coords);
-    char bufferRes[1026] = {0};
+    char bufferRes[1032] = {0};
     int sock;
 
     // create socket

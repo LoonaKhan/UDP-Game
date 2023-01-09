@@ -6,7 +6,7 @@
 #include "block.h"
 
 
-chunk::chunk(char *coords)
+chunk::chunk(int *coords)
         : coords{coords[0], coords[1]},
           blocks()
 {

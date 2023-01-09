@@ -15,7 +15,7 @@ namespace chunk {
     class Chunk {
 
     private: // attributes
-        char coords[2];
+        int coords[2];
         block::Block blocks[256]; // todo: needs to be the same size of chunk_size^2
 
     public: // attributes
@@ -26,7 +26,7 @@ namespace chunk {
          * used when clients create a chunk.
          * sets coords and creates all blocks
          * */
-        Chunk(char coords[2]);
+        Chunk(int coords[2]);
 
         /*
          * Used when we recieve chunks from the server
@@ -37,7 +37,7 @@ namespace chunk {
         Chunk(char buffer[], int len);
 
         // getters
-        char* getCoords();
+        int* getCoords();
 
         block::BlockArray getBlocks();
 

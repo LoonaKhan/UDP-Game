@@ -7,7 +7,7 @@
 
 namespace chunk {
 
-    Chunk::Chunk(char *coords)
+    Chunk::Chunk(int *coords)
     : coords{coords[0], coords[1]} {
         int i = 0;
         for (char x = 0; x < 16; x++) {
@@ -19,9 +19,10 @@ namespace chunk {
     }
 
     Chunk::Chunk(char *buffer, int len)
-    : coords{buffer[0], buffer[1]} {
+    : coords{buffer[0] + (buffer[1]<<8) + (buffer[2] << 16) + (buffer[3] << 24),
+             buffer[4] + (buffer[5]<<8) + (buffer[6] << 16) + (buffer[7] << 24)} {
 
-        for (int b_idx=2 , i=0; // b_idx is the index of the buffer, i is the index of this->blocks
+        for (int b_idx=8, i=0; // b_idx is the index of the buffer, i is the index of this->blocks
                 b_idx < len;
                 b_idx+=4, i++) {
             char b_coords[] = {buffer[b_idx], buffer[b_idx+1]};
@@ -48,7 +49,7 @@ namespace chunk {
         return b_arr;
     }
 
-    char *Chunk::getCoords(){
+    int *Chunk::getCoords(){
         return this->coords;
     }
 

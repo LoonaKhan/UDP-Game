@@ -9,13 +9,13 @@
 class chunk {
 
 private: // members
-    char coords[2];
+    int coords[2];
     block blocks[256];
 
 public: // members
 
 public: // methods
-    chunk(char *coords);
+    chunk(int *coords);
 
 private: // methods
 
