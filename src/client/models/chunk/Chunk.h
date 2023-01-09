@@ -12,6 +12,11 @@ using json = nlohmann::json;
 
 namespace chunk {
 
+    struct ByteArr{
+        char bytes[1032];
+        int len = 1032;
+    };
+
     class Chunk {
 
     private: // attributes
@@ -35,6 +40,9 @@ namespace chunk {
          * the rest are used to create the blocks
          */
         Chunk(char buffer[], int len);
+
+        // converts the chunk data to bytes so we can send it along with a header
+        ByteArr toBytes();
 
         // getters
         int* getCoords();

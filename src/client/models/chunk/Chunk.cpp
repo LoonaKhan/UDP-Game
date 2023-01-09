@@ -3,7 +3,6 @@
 //
 
 #include "Chunk.h"
-#include "iostream"
 
 namespace chunk {
 
@@ -28,6 +27,33 @@ namespace chunk {
             char b_coords[] = {buffer[b_idx], buffer[b_idx+1]};
             this->blocks[i] = block::Block(b_coords, buffer[b_idx+2], buffer[b_idx+3]);
         }
+    }
+
+    ByteArr Chunk::toBytes() {
+         ByteArr buffer;
+
+        // append the chunks
+        buffer.bytes[0] = this->coords[0] & 0xFF;
+        buffer.bytes[1] = (this->coords[0] >> 8) & 0xFF;
+        buffer.bytes[2] = (this->coords[0] >> 16) & 0xFF;
+        buffer.bytes[3] = (this->coords[0] >> 24) & 0xFF;
+        buffer.bytes[4] = this->coords[1] & 0xFF;
+        buffer.bytes[5] = (this->coords[1] >> 8) & 0xFF;
+        buffer.bytes[6] = (this->coords[1] >> 16) & 0xFF;
+        buffer.bytes[7] = (this->coords[1] >> 24) & 0xFF;
+
+
+        // add the blocks
+        int b_idx=8;
+        for (auto& b : this->blocks) {
+            buffer.bytes[b_idx] = b.getCoords()[0];
+            buffer.bytes[b_idx+1] = b.getCoords()[1];
+            buffer.bytes[b_idx+2] = b.getColour();
+            buffer.bytes[b_idx+3] = b.getHeight();
+            b_idx +=4;
+        }
+
+        return buffer;
     }
 
     block::Block Chunk::getBlock(char *coords)  {
