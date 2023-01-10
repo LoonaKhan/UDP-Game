@@ -1,6 +1,7 @@
 package chunks
 
 import (
+	"encoding/binary"
 	"gorm.io/gorm"
 	"math"
 	"server/conf"
@@ -15,6 +16,22 @@ type Chunk struct {
 	Y int `json:"y"`
 
 	Blocks []blocks.Block `json:"blocks"`
+}
+
+func toBytes(c *Chunk) (buffer []byte) { // converts the chunk to binary to send to the client
+	buffer = make([]byte, 1032)
+	binary.LittleEndian.PutUint32(buffer[0:4], uint32(c.X))
+	binary.LittleEndian.PutUint32(buffer[4:8], uint32(c.Y))
+
+	i := 8
+	for b := range c.Blocks {
+		buffer[i] = c.Blocks[b].X
+		buffer[i+1] = c.Blocks[b].Y
+		buffer[i+2] = c.Blocks[b].Colour
+		buffer[i+3] = c.Blocks[b].Height
+	}
+
+	return buffer
 }
 
 func ToChunkCoords(pos []int) []int { // converts block coordinates to chunk coordinates
