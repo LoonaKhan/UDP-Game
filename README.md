@@ -9,11 +9,8 @@
 - Client:
   - C++ 17
   - CMake 3.22.1
-  - {fmt}
-  - nlohmann/json
-  - will probably do this in a bash script
-
-
+  - [{fmt}](https://fmt.dev/latest/index.html)
+  - [nlohmann::json](https://github.com/nlohmann/json)
 
 ### Building
 - Server:
