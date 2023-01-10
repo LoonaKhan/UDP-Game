@@ -5,7 +5,7 @@ project(CLIENT)
 set(TEST_CLIENT test_client)
 
 add_executable(${PROJECT_NAME} main.cpp net/core/core.cpp net/core/core.h net/calls/calls.cpp net/calls/calls.h models/chunk/Chunk.cpp models/chunk/Chunk.h models/block/Block.cpp models/block/Block.h models/player/player.cpp models/player/player.h)
-add_executable(${TEST_CLIENT} tests/test-requests.cpp net/macros/macros.cpp net/macros/macros.h net/parser/parser.cpp net/parser/parser.h net/calls/calls.cpp net/calls/calls.h models/chunk/Chunk.cpp models/chunk/Chunk.h models/player/player.cpp models/player/player.h)
+add_executable(${TEST_CLIENT} tests/test-requests.cpp net/macros/macros.cpp net/macros/macros.h net/parser/parser.cpp net/parser/parser.h net/calls/calls.cpp net/calls/calls.h models/chunk/Chunk.cpp models/chunk/Chunk.h models/player/player.cpp models/player/player.h models/block/Block.cpp models/block/Block.h)
 
 # other tests
 add_executable(test_calls net/calls/tests/test.cpp net/calls/calls.cpp net/calls/calls.h)
