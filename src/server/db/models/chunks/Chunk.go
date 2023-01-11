@@ -16,7 +16,7 @@ type Chunk struct {
 	X int `json:"x"`
 	Y int `json:"y"`
 
-	Blocks [256]b.Block `json:"blocks"`
+	Blocks []b.Block `json:"blocks"`
 }
 
 func Init(x int, y int) Chunk {
@@ -27,16 +27,14 @@ func Init(x int, y int) Chunk {
 
 func (c *Chunk) genBlocks() {
 
-	i := 0
 	for x := 0; x < gv.CHUNK_SIZE; x++ {
 		for y := 0; y < gv.CHUNK_SIZE; y++ {
-			c.Blocks[i] = b.Init(byte(x), byte(y), float64(c.X), float64(c.Y))
-			i++
+			c.Blocks = append(c.Blocks, b.Init(byte(x), byte(y), float64(c.X), float64(c.Y)))
 		}
 	}
 }
 
-func toBytes(c *Chunk) (buffer []byte) { // converts the chunk to binary to send to the client
+func (c *Chunk) ToBytes() (buffer []byte) { // converts the chunk to binary to send to the client
 	buffer = make([]byte, 1032)
 	binary.LittleEndian.PutUint32(buffer[0:4], uint32(c.X))
 	binary.LittleEndian.PutUint32(buffer[4:8], uint32(c.Y))
@@ -47,6 +45,7 @@ func toBytes(c *Chunk) (buffer []byte) { // converts the chunk to binary to send
 		buffer[i+1] = c.Blocks[b].Y
 		buffer[i+2] = c.Blocks[b].Colour
 		buffer[i+3] = c.Blocks[b].Height
+		i += 4
 	}
 
 	return buffer

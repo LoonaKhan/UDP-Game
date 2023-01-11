@@ -16,37 +16,32 @@ import (
 )
 
 var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header){
-	"get_chunks": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
+	"get_chunk": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		/*
-			User submits their coordinates,
-			server sends back all existing chunks as well as the top-left and bottom-right coords of the chunk span
+			User submits the coordinates of a chunk they want to load.
+			determine if they are in render distance of said chunk
+			generate and return said chunk
 		*/
 		if !(a.Matches(header.Cred, addr)) { // client credentials must match
 			return
 		}
 
 		// accepts the user data
-		var coords rs.PlayerCoords
+		var coords map[string][]int
 		err := json.Unmarshal(buffer, &coords)
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
-		// uses coords to find the chunk span to render
-		curChunk := c.ToChunkCoords(coords.Coords)
-		TL, BR, xspan, yspan := c.ChunkSpan(curChunk)
-
-		// gets all chunks in the chunk span that already exist
-		var chunks []c.Chunk
-		db.Conn.Find(&chunks, "x IN ? AND y IN ?", xspan, yspan)
-
-		// return the chunk span as well as the existing chunks
-		span := rs.ChunkSpan{
-			Chunks: chunks,
-			TL:     TL,
-			BR:     BR,
+		// search for that chunk
+		var chunk c.Chunk
+		if db.Conn.First(&chunk, "x = ? AND y = ?", coords["coords"][0], coords["coords"][1]).Error != nil {
+			// if no chunk is found, create one
+			chunk = c.Init(coords["coords"][0], coords["coords"][1])
 		}
-		res := nu.FormatRes(span, header)
+
+		res := nu.FormatResBinary(chunk.ToBytes(), header)
 		conn.WriteToUDP(res, addr)
+
 	},
 
 	"post_chunk": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
@@ -65,22 +60,24 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		err_handling.Handle(err)
 
 		if db.Conn.First(&c.Chunk{}, "x = ? AND y = ?", chunk.X, chunk.Y).Error == nil { // if a record is found
-			res := nu.FormatRes(rs.Response{Err: "Chunk not created. Chunk already exists"}, header)
+			res := nu.FormatResJson(rs.Response{Err: "Chunk not created. Chunk already exists"}, header)
 			conn.WriteToUDP(res, addr)
 			return
 		} else {
 			db.Conn.Create(&chunk)
 		}
 
-		res := nu.FormatRes(rs.Response{Msg: "Chunk Created."}, header)
+		res := nu.FormatResJson(rs.Response{Msg: "Chunk Created."}, header)
 		conn.WriteToUDP(res, addr)
 	},
 
 	"post_chunk_updates": func(buffer []byte, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) {
 		/*
-		* player sends in a chunk that has been updated.
-		* server updates that chunk and sets it to all players within render distance of that chunk.
-		* */
+			* player sends in a chunk that has been updated.
+			* server updates that chunk and sets it to all players within render distance of that chunk.
+
+			todo: make this only update the given block?
+			* */
 		if !(a.Matches(header.Cred, addr)) { // client credentials must match
 			fmt.Println("denied")
 			return
@@ -93,7 +90,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		// checks if the chunk exists
 		if db.Conn.First(&c.Chunk{}, "x = ? AND y = ?", updated.Chunk.X, updated.Chunk.Y).Error != nil {
-			res := nu.FormatRes(rs.Response{Err: "Unable to update chunk. chunk does not exist."}, header)
+			res := nu.FormatResJson(rs.Response{Err: "Unable to update chunk. chunk does not exist."}, header)
 			conn.WriteToUDP(res, addr)
 			return
 		}
@@ -155,7 +152,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		res_data := map[string]string{
 			"msg": "Updated",
 		}
-		res := nu.FormatRes(res_data, header)
+		res := nu.FormatResJson(res_data, header)
 		conn.WriteToUDP(res, addr)
 
 	},
@@ -171,7 +168,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		defer UDPRespondErr("Unable to create player", conn, addr, header)
 		err_handling.Handle(db.Conn.Create(&p.Player{Name: plr["name"]}).Error)
 
-		res := nu.FormatRes(rs.Response{Msg: "Created"}, header)
+		res := nu.FormatResJson(rs.Response{Msg: "Created"}, header)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -187,14 +184,14 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		var plr p.Player
 		if db.Conn.First(&plr, "name = ?", req["name"]).Error != nil { // if no record is found
-			res := nu.FormatRes(rs.Response{Err: "Login refused. Specified player does not exist"}, header)
+			res := nu.FormatResJson(rs.Response{Err: "Login refused. Specified player does not exist"}, header)
 			conn.WriteToUDP(res, addr)
 			return
 		}
 
 		// checks if the player is already logged in
 		if a.Mapped(plr.ID) {
-			res := nu.FormatRes(rs.Response{Err: "Login refused. Specified player is logged in already"}, header)
+			res := nu.FormatResJson(rs.Response{Err: "Login refused. Specified player is logged in already"}, header)
 			conn.WriteToUDP(res, addr)
 			return
 		}
@@ -202,7 +199,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		// if the player exists and isnt already logged in, map em together
 		header.Cred = plr.ID // sets the credential to the player id
 		a.Insert(plr.ID, addr)
-		res := nu.FormatRes(rs.PlayerID{Id: plr.ID}, header)
+		res := nu.FormatResJson(rs.PlayerID{Id: plr.ID}, header)
 		conn.WriteToUDP(res, addr)
 	},
 
@@ -237,7 +234,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 // another response function which is like recover, but it Writes to UDP the argument u send it
 func UDPRespondErr(msg string, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) { // recovers a thread and sends a response to the client
 	if r := recover(); r != nil {
-		res := nu.FormatRes(rs.Response{Err: msg}, header)
+		res := nu.FormatResJson(rs.Response{Err: msg}, header)
 		conn.WriteToUDP(res, addr)
 	}
 }

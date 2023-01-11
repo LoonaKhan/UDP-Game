@@ -62,6 +62,9 @@ func ReadRes(c *net.UDPConn, cred *uint) {
 			}
 			UpdateCred(playerid.Id, cred)
 			go VerifyOnline(c, *cred)
+		} else if header.Method == "get_chunk" {
+			fmt.Println(string(buffer[:idx]))
+			fmt.Println(buffer[idx+1 : n])
 		} else {
 			if n > 0 {
 				fmt.Println("res: ", string(buffer))

@@ -16,7 +16,7 @@ var calls = map[string]string{
 	"post_player":        "{\"method\":\"post_player\"}" + "|" + "{\"name\": \"loona\"}",
 	"login":              "{\"method\":\"login\"}" + "|" + "{\"name\": \"loona\"}",
 	"update_pos":         "{\"method\":\"update_pos\", \"cred\":%d}" + "|" + "{\"coords\": [10,10]}",
-	"get_chunks":         "{\"method\":\"get_chunks\", \"cred\":%d}" + "|" + "{\"coords\":[0,0]}",
+	"get_chunk":          "{\"method\":\"get_chunk\", \"cred\":%d}" + "|" + "{\"coords\":[10,10]}",
 	"post_chunk":         "{\"method\":\"post_chunk\", \"cred\":%d}" + "|" + "{\"chunks\": {\"x\": 0, \"y\": 0}}",
 	"post_chunk_updates": "{\"method\":\"post_chunk_updates\", \"cred\":%d}" + "|" + "{\"chunk\":{\"x\":0, \"y\":0}}",
 }
