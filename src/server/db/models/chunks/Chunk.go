@@ -5,7 +5,8 @@ import (
 	"gorm.io/gorm"
 	"math"
 	"server/conf"
-	"server/db/models/blocks"
+	b "server/db/models/blocks"
+	gv "server/globvars"
 )
 
 type Chunk struct {
@@ -15,7 +16,24 @@ type Chunk struct {
 	X int `json:"x"`
 	Y int `json:"y"`
 
-	Blocks []blocks.Block `json:"blocks"`
+	Blocks [256]b.Block `json:"blocks"`
+}
+
+func Init(x int, y int) Chunk {
+	c := Chunk{X: x, Y: y}
+	c.genBlocks()
+	return c
+}
+
+func (c *Chunk) genBlocks() {
+
+	i := 0
+	for x := 0; x < gv.CHUNK_SIZE; x++ {
+		for y := 0; y < gv.CHUNK_SIZE; y++ {
+			c.Blocks[i] = b.Init(byte(x), byte(y), float64(c.X), float64(c.Y))
+			i++
+		}
+	}
 }
 
 func toBytes(c *Chunk) (buffer []byte) { // converts the chunk to binary to send to the client
