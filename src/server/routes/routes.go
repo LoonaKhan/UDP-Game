@@ -32,6 +32,15 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		defer UDPRespondErr("Invalid request data", conn, addr, header)
 		err_handling.Handle(err)
 
+		// determines if the player is within render distance of that chunk.
+		var plr p.Player
+		db.Conn.First(&plr, "id = ?", header.Cred)
+		if !c.IsInRenderDist(c.ToChunkCoords([]int{plr.X, plr.Y}), coords["coords"]) {
+			res := nu.FormatResJson(rs.Response{Err: "Can not query chunk. player is not in render distance"}, header)
+			conn.WriteToUDP(res, addr)
+			return
+		}
+
 		// search for that chunk
 		var chunk c.Chunk
 		if db.Conn.First(&chunk, "x = ? AND y = ?", coords["coords"][0], coords["coords"][1]).Error != nil {
