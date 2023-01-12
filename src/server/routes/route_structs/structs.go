@@ -32,7 +32,8 @@ type UpdatedChunk struct { // used by chunk update requests
 	Chunk chunks.Chunk `json:"chunk"`
 }
 
-type Header struct { // our header to display what method we want to call and the credentials
-	Method string `json:"method"`
-	Cred   uint   `json:"cred"`
+type Header struct { // our header that is placed on every request and response
+	Method string `json:"method"` // the method we are calling
+	Cred   uint   `json:"cred"`   // the client's player they are logged into
+	Code   bool   `json:"code"`   // pass/fail status code
 }
