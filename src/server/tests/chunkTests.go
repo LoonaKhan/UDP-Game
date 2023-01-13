@@ -12,8 +12,8 @@ func blockInitTest() {
 	block := b.Init(1, 1, 1, 1)
 	fmt.Printf("Block: [%d, %d],\n"+
 		"Noise: %f\n"+
-		"Colour: %d, Height: %d\n",
-		block.X, block.Y, block.Noise, block.Colour, block.Height)
+		"Colour: [%d,%d,%d] Height: %d\n",
+		block.X, block.Y, block.Noise, block.Colour[0], block.Colour[1], block.Colour[2], block.Height)
 }
 
 func chunkInitTest() {
@@ -25,8 +25,8 @@ func chunkInitTest() {
 	for i := range chunk.Blocks {
 		fmt.Printf("Block: [%d, %d],\n"+
 			"Noise: %f\n"+
-			"Colour: %d, Height: %d\n",
-			chunk.Blocks[i].X, chunk.Blocks[i].Y, chunk.Blocks[i].Noise, chunk.Blocks[i].Colour, chunk.Blocks[i].Height)
+			"Colour: %d, %d, %d, Height: %d\n",
+			chunk.Blocks[i].X, chunk.Blocks[i].Y, chunk.Blocks[i].Noise, chunk.Blocks[i].Colour[0], chunk.Blocks[i].Colour[1], chunk.Blocks[i].Colour[2], chunk.Blocks[i].Height)
 		avg += chunk.Blocks[i].Noise
 		noises = append(noises, chunk.Blocks[i].Noise)
 		if chunk.Blocks[i].Noise > high {
@@ -58,7 +58,8 @@ func main() {
 		fmt.Printf("In render dist: %d, %d\n", renderDist[i][0], renderDist[i][1])
 	}*/
 
-	//chunkInitTest()
-	renderDistanceTest()
+	chunkInitTest()
+	//renderDistanceTest()
+	//blockInitTest()
 
 }

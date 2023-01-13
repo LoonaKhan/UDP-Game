@@ -5,6 +5,22 @@ import (
 	gv "server/globvars"
 )
 
+var biomeColours = map[string][]byte{
+	"Lake":     {28, 43, 140},
+	"Beach":    {247, 250, 155},
+	"Plains":   {32, 110, 33},
+	"Forest":   {8, 87, 9},
+	"Mountain": {93, 97, 93},
+}
+
+var biomeHeights = map[string]byte{
+	"Lake":     0,
+	"Beach":    0,
+	"Plains":   1,
+	"Forest":   1,
+	"Mountain": 5,
+}
+
 type Block struct {
 	gorm.Model
 
@@ -13,8 +29,8 @@ type Block struct {
 	Y byte `json:"y"`
 
 	// determined by perlin noise on the client
-	Colour byte `json:"colour"` //todo: this needs to be 3 bytes. unsigned
-	Height byte `json:"height"`
+	Colour []byte `json:"colour"` //todo: this needs to be 3 bytes. unsigned. // todo: future, its a number the client assigns to a texture
+	Height byte   `json:"height"`
 
 	Noise float64 // the perlin noise value of the block. we use it to determine other things
 
@@ -44,16 +60,43 @@ func (b *Block) genColour() {
 	// generates a colour based on the block's noise and the seed
 	// todo, implement the algo
 
-	//_ = gv.P.Noise2D(b.Noise, gv.SEED)
+	colour := []byte{}
+
+	noise := gv.P.Noise2D(b.Noise, gv.SEED) * 1000 // ranges from [-1000, 1000]
+
+	// based on noise, assign a base value
+	if noise >= -1000 && noise < -600 {
+		colour = biomeColours["Lake"]
+	} else if noise >= -600 && noise < -200 {
+		colour = biomeColours["Beach"]
+	} else if noise >= -200 && noise < 200 {
+		colour = biomeColours["Plains"]
+	} else if noise >= 200 && noise < 600 {
+		colour = biomeColours["Forest"]
+	} else if noise >= 600 && noise <= 1000 {
+		colour = biomeColours["Mountain"]
+	}
+
+	// finetune the value with another noise value
 
 	// convert noise to a colour
-	b.Colour = 1
+	b.Colour = colour
 }
 
 func (b *Block) genHeight() {
 	// generates a height based on the block's noise and seed
+	// todo: later, this just determines the texture?
 
-	//_ = gv.P.Noise2D(b.Noise, gv.SEED)
-
-	b.Height = 1
+	noise := gv.P.Noise2D(b.Noise, gv.SEED)
+	if noise >= -1000 && noise < -600 {
+		b.Height = biomeHeights["Lake"]
+	} else if noise >= -600 && noise < -200 {
+		b.Height = biomeHeights["Beach"]
+	} else if noise >= -200 && noise < 200 {
+		b.Height = biomeHeights["Plains"]
+	} else if noise >= 200 && noise < 600 {
+		b.Height = biomeHeights["Forest"]
+	} else if noise >= 600 && noise <= 1000 {
+		b.Height = biomeHeights["Mountain"]
+	}
 }
