@@ -42,6 +42,12 @@ func chunkInitTest() {
 
 }
 
+func renderDistanceTest() {
+	c1 := []int{16, 16}
+	c2 := []int{31, 31}
+	fmt.Println(c.IsInRenderDist(c1, c2))
+}
+
 func main() {
 	/*chunkCoords := chunks.ToChunkCoords(pos)
 	fmt.Printf("Chunk coords: %d, %d\n", chunkCoords[0], chunkCoords[1])
@@ -52,6 +58,7 @@ func main() {
 		fmt.Printf("In render dist: %d, %d\n", renderDist[i][0], renderDist[i][1])
 	}*/
 
-	chunkInitTest()
+	//chunkInitTest()
+	renderDistanceTest()
 
 }

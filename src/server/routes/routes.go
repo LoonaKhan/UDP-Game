@@ -36,6 +36,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		var plr p.Player
 		db.Conn.First(&plr, "id = ?", header.Cred)
 		if !c.IsInRenderDist(c.ToChunkCoords([]int{plr.X, plr.Y}), coords["coords"]) {
+			header.Code = false
 			res := nu.FormatResJson(rs.Response{Err: "Can not query chunk. player is not in render distance"}, header)
 			conn.WriteToUDP(res, addr)
 			return
@@ -46,8 +47,10 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		if db.Conn.First(&chunk, "x = ? AND y = ?", coords["coords"][0], coords["coords"][1]).Error != nil {
 			// if no chunk is found, create one
 			chunk = c.Init(coords["coords"][0], coords["coords"][1])
+			db.Conn.Create(&chunk)
 		}
 
+		header.Code = true
 		res := nu.FormatResBinary(chunk.ToBytes(), header)
 		conn.WriteToUDP(res, addr)
 
@@ -161,6 +164,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		res_data := map[string]string{
 			"msg": "Updated",
 		}
+		header.Code = true
 		res := nu.FormatResJson(res_data, header)
 		conn.WriteToUDP(res, addr)
 
@@ -193,6 +197,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		var plr p.Player
 		if db.Conn.First(&plr, "name = ?", req["name"]).Error != nil { // if no record is found
+			header.Code = false
 			res := nu.FormatResJson(rs.Response{Err: "Login refused. Specified player does not exist"}, header)
 			conn.WriteToUDP(res, addr)
 			return
@@ -200,6 +205,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		// checks if the player is already logged in
 		if a.Mapped(plr.ID) {
+			header.Code = false
 			res := nu.FormatResJson(rs.Response{Err: "Login refused. Specified player is logged in already"}, header)
 			conn.WriteToUDP(res, addr)
 			return
@@ -207,6 +213,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 
 		// if the player exists and isnt already logged in, map em together
 		header.Cred = plr.ID // sets the credential to the player id
+		header.Code = true
 		a.Insert(plr.ID, addr)
 		res := nu.FormatResJson(rs.PlayerID{Id: plr.ID}, header)
 		conn.WriteToUDP(res, addr)
@@ -243,6 +250,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 // another response function which is like recover, but it Writes to UDP the argument u send it
 func UDPRespondErr(msg string, conn *net.UDPConn, addr *net.UDPAddr, header rs.Header) { // recovers a thread and sends a response to the client
 	if r := recover(); r != nil {
+		header.Code = false
 		res := nu.FormatResJson(rs.Response{Err: msg}, header)
 		conn.WriteToUDP(res, addr)
 	}
