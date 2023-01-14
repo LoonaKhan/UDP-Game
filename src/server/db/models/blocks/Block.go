@@ -5,12 +5,12 @@ import (
 	gv "server/globvars"
 )
 
-var biomeColours = map[string][]byte{
-	"Lake":     {28, 43, 140},
-	"Beach":    {247, 250, 155},
-	"Plains":   {32, 110, 33},
-	"Forest":   {8, 87, 9},
-	"Mountain": {93, 97, 93},
+var biomeColours = map[string]byte{
+	"Lake":     0,
+	"Beach":    1,
+	"Plains":   2,
+	"Forest":   3,
+	"Mountain": 4,
 }
 
 var biomeHeights = map[string]byte{
@@ -29,8 +29,8 @@ type Block struct {
 	Y byte `json:"y"`
 
 	// determined by perlin noise on the client
-	Colour []byte `json:"colour"` //todo: this needs to be 3 bytes. unsigned. // todo: future, its a number the client assigns to a texture
-	Height byte   `json:"height"`
+	Colour byte `json:"colour"`
+	Height byte `json:"height"`
 
 	Noise float64 // the perlin noise value of the block. we use it to determine other things
 
@@ -60,7 +60,7 @@ func (b *Block) genColour() {
 	// generates a colour based on the block's noise and the seed
 	// todo, implement the algo
 
-	colour := []byte{}
+	var colour byte
 
 	noise := gv.P.Noise2D(b.Noise, gv.SEED) * 1000 // ranges from [-1000, 1000]
 
@@ -99,4 +99,6 @@ func (b *Block) genHeight() {
 	} else if noise >= 600 && noise <= 1000 {
 		b.Height = biomeHeights["Mountain"]
 	}
+
+	// finetunes the value afterward
 }

@@ -12,21 +12,21 @@ func blockInitTest() {
 	block := b.Init(1, 1, 1, 1)
 	fmt.Printf("Block: [%d, %d],\n"+
 		"Noise: %f\n"+
-		"Colour: [%d,%d,%d] Height: %d\n",
-		block.X, block.Y, block.Noise, block.Colour[0], block.Colour[1], block.Colour[2], block.Height)
+		"Colour: %d, Height: %d\n",
+		block.X, block.Y, block.Noise, block.Colour, block.Height)
 }
 
 func chunkInitTest() {
 	var avg, high, low float64 = 0, 0, 0
 	var noises []float64
 
-	chunk := c.Init(1, 1)
+	chunk := c.Init(20, 20)
 	fmt.Printf("Chunk: [%d, %d]\n", chunk.X, chunk.Y)
 	for i := range chunk.Blocks {
 		fmt.Printf("Block: [%d, %d],\n"+
 			"Noise: %f\n"+
-			"Colour: %d, %d, %d, Height: %d\n",
-			chunk.Blocks[i].X, chunk.Blocks[i].Y, chunk.Blocks[i].Noise, chunk.Blocks[i].Colour[0], chunk.Blocks[i].Colour[1], chunk.Blocks[i].Colour[2], chunk.Blocks[i].Height)
+			"Colour: %d, Height: %d\n",
+			chunk.Blocks[i].X, chunk.Blocks[i].Y, chunk.Blocks[i].Noise, chunk.Blocks[i].Colour, chunk.Blocks[i].Height)
 		avg += chunk.Blocks[i].Noise
 		noises = append(noises, chunk.Blocks[i].Noise)
 		if chunk.Blocks[i].Noise > high {

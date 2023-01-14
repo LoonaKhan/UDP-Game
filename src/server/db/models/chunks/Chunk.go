@@ -35,7 +35,7 @@ func (c *Chunk) genBlocks() {
 }
 
 func (c *Chunk) ToBytes() (buffer []byte) { // converts the chunk to binary to send to the client
-	buffer = make([]byte, 1536)
+	buffer = make([]byte, 1032)
 	binary.LittleEndian.PutUint32(buffer[0:4], uint32(c.X))
 	binary.LittleEndian.PutUint32(buffer[4:8], uint32(c.Y))
 
@@ -43,11 +43,9 @@ func (c *Chunk) ToBytes() (buffer []byte) { // converts the chunk to binary to s
 	for b := range c.Blocks {
 		buffer[i] = c.Blocks[b].X
 		buffer[i+1] = c.Blocks[b].Y
-		buffer[i+2] = c.Blocks[b].Colour[0]
-		buffer[i+3] = c.Blocks[b].Colour[1]
-		buffer[i+4] = c.Blocks[b].Colour[2]
+		buffer[i+2] = c.Blocks[b].Colour
 		buffer[i+3] = c.Blocks[b].Height
-		i += 6
+		i += 4
 	}
 
 	return buffer
