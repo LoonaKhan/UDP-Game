@@ -27,13 +27,7 @@ namespace block {
     };
 
     // the colour codes of each biome
-    unsigned char colours[5][3]{
-            {28, 43, 140},
-            {247, 250, 155},
-            {32, 110, 33},
-            {8, 87, 9},
-            {93, 97, 93}
-    };
+
 
 } // block
 

@@ -9,8 +9,10 @@
 using json = nlohmann::json;
 
 
-const json glob = json::parse(std::ifstream("globvars.json"));
+namespace glob{
+extern const json g;
 
-const auto RENDER_DIST = glob["RENDER_DIST"];
+extern const int RENDER_DIST;
+}
 
 

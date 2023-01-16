@@ -11,10 +11,20 @@ namespace block {
     colour(colour),
     height(height)
     {
-        // if colour || height == 0: set em
+        this->setPosition((float)this->coords[0], (float)this->coords[1]);
+
+        auto c = colours[this->colour];
+        this->setColor(sf::Color(c[0], c[1], c[2]));
+
+        this->setScale(5, 5); //todo: get size
+        // position
     }
 
     Block::Block() {}
+
+    void Block::render(sf::RenderWindow *window) {
+        window->draw(*this);
+    }
 
     char *Block::getCoords() {
         return this->coords;
@@ -27,4 +37,12 @@ namespace block {
     char Block::getHeight() const {
         return this->height;
     }
+
+    unsigned char colours[5][3]{
+            {28, 43, 140},
+            {247, 250, 155},
+            {32, 110, 33},
+            {8, 87, 9},
+            {93, 97, 93}
+    };
 } // block

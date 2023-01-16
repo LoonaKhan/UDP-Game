@@ -1,17 +1,19 @@
 go server:
-    reqrite post_chunks, get_chunks and post_chunk_updates methods
-        send/recieve as binary data  
-        get_chunks:
-            1 chunk at a time?
-            client knows their render_dist, asks for each chunk seperately
     post_chunk_updates ignores the player who sent data
     prevents players from moving faster than legally possible
+    database issues
+        performance
+        "too many open files"
     seed for each world
         randomly determined by the server on first start?
-    fix db locking
-        retrys if locked? detect which error ur getting
     security/optimizations
         tick system(TPS)?
+        header is reduced to bytes (less overhead)
+            method: byte (methods can just be numbered?)
+            success: bool
+            id: byte/short
+            timestamp: short?
+                server time?
         ignores ddosing stuffs
 
 
