@@ -10,6 +10,7 @@
 #include <thread>
 #include <nlohmann/json.hpp>
 #include "../parser/parser.h"
+#include "../../models/chunk/Chunk.h"
 
 using namespace std::this_thread; // sleep_for, sleep_until
 using namespace std::chrono; // nanoseconds, system_clock, seconds

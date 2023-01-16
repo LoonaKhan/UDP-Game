@@ -30,9 +30,9 @@ std::string net::update_pos(int &cred, int *coords) {
     return header.dump()+"|"+body.dump();
 }
 
-std::string net::get_chunks(int &cred, int *chunk_coords) {
+std::string net::get_chunk(int &cred, int *chunk_coords) {
     json header, body;
-    header["method"] = "get_chunks";
+    header["method"] = "get_chunk";
     header["cred"] = cred;
     body["coords"] = {chunk_coords[0], chunk_coords[1]};
     return header.dump()+"|"+body.dump();

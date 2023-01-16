@@ -9,6 +9,7 @@
 
 #include "../net/macros/macros.h"
 #include "../net/calls/calls.h"
+#include "../globvars/globvars.h"
 
 using namespace std::chrono;
 using namespace std::this_thread; // sleep_for, sleep_until
@@ -55,9 +56,12 @@ int main() {
                 fmt::print("{} Bytes sent\n", bytesSent);
             }
             else if (method == "get_chunks") {
-                int chunk_coords[] = {0,0};
-                bytesSent = c.send(net::get_chunks(cred, chunk_coords));
-                fmt::print("{} Bytes sent\n", bytesSent);
+                for (int x=0; x<glob::RENDER_DIST; x++)
+                    for (int y=0; y < glob::RENDER_DIST; y++) {
+                        int coords[] = {x,y};
+                        c.send(net::get_chunk(cred, coords));
+                        sleep_for(milliseconds(20));
+                    }
             }
         }
     }

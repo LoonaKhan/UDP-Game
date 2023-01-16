@@ -79,4 +79,8 @@ namespace chunk {
         return this->coords;
     }
 
+    std::map<Chunk, int64_t> chunks; // stores chunks using an array of their coords as a key
+
+    Chunk::Chunk() {}
+
 } // chunk

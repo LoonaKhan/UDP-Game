@@ -45,7 +45,14 @@ void net::readRes(net::UDPConn &c, int &cred, bool &logged_in) { // reads and ha
                 fmt::print("err: {}", errmsg);
             }
         }
-        if (header["method"] != "players")
-            fmt::print("response: {}\n", (std::string)buffer);
+        else if (header["method"] == "get_chunk") { // recieves a chunk and appends it
+            char *body = buffer + idx+1;
+            auto new_c = chunk::Chunk(body, n-(idx+1));
+            chunk::chunks.insert({new_c, NULL});
+            fmt::print("Chunk: [{},{}]\n", (int)new_c.getCoords()[0], (int)new_c.getCoords()[1]);
+        }
+        if (header["method"] != "players") {
+            //fmt::print("response: {}\n", (std::string) buffer);
+        }
     }
 }

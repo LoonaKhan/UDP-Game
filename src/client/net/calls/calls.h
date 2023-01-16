@@ -23,9 +23,7 @@ namespace net {
 
     std::string update_pos(int &cred, int coords[]);
 
-    std::string get_chunks(int &cred, int chunk_coords[]);
-
-    // post chunk
+    std::string get_chunk(int &cred, int chunk_coords[]);
 
     // post chunk updates
 }

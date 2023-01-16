@@ -6,6 +6,8 @@
 
 #include <vector>
 #include <nlohmann/json.hpp>
+#include <map>
+#include <iostream>
 #include "../block/Block.h"
 
 using json = nlohmann::json;
@@ -41,6 +43,8 @@ namespace chunk {
          */
         Chunk(char buffer[], int len);
 
+        Chunk(); // needed a blank constructor so we can create chunk arrays
+
         // converts the chunk data to bytes so we can send it along with a header
         ByteArr toBytes();
 
@@ -53,8 +57,18 @@ namespace chunk {
 
         block::Block getBlock(char coords[]);
 
+        // operator so we can use it as a map key
+        bool operator<(const Chunk& other) const {
+            if (this->coords[0] == other.coords[0]) { // if the x coords are the same, use the y coords
+                return this->coords[1] < other.coords[1];
+            }
+            return this->coords[0] < other.coords[0];
+        }
+
     private: // methods
 
     };
+
+    extern std::map<Chunk, int64_t> chunks; // stores chunks using an array of their coords as a key
 
 } // chunk
