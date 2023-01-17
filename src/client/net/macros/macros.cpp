@@ -5,25 +5,31 @@
 #include "macros.h"
 #include "iostream"
 
-void net::verifyOnline(net::UDPConn &c, int id) { // continuously pings the server to prevent timeouts
+using namespace glob;
+
+void net::verifyOnline(net::UDPConn &c) { // continuously pings the server to prevent timeouts
     for (;;){
         sleep_for(seconds(4)); // set this to the globvars
-        auto req = "{"+fmt::format("\"method\":\"syn\", \"cred\":{}", id)+"}|{}";
+        auto req = "{"+fmt::format("\"method\":\"syn\", \"cred\":{}", cred)+"}|{}";
         c.send(req);
     }
 }
 
 
-void net::updateCred(int id, int &cred, bool &logged_in) { // updates credentials.
+void net::updateCred(int id) { // updates credentials.
     cred = id;
     logged_in = true;
 }
 
-void net::readRes(net::UDPConn &c, int &cred, bool &logged_in) { // reads and handle the responses from the server in its own thread
+void net::readRes(net::UDPConn &c) { // reads and handle the responses from the server in its own thread
     for (;;) { // runs indefinitely
         char buffer[8192];
         auto n = c.recieve(buffer, sizeof(buffer)); // recieve data
         buffer[n] = '\0';
+
+        // locks
+        std::unique_lock lock_logged(*Mlogged_in_ptr);
+        std::unique_lock lock_posted(*Mposted_plr_ptr);
 
         // parse header
         int idx = net::seperate(buffer, '|');
@@ -36,12 +42,24 @@ void net::readRes(net::UDPConn &c, int &cred, bool &logged_in) { // reads and ha
             try {
                 json body = json::parse(((std::string) buffer).substr(idx + 1));
                 if (body.contains("id")){
-                    updateCred(body["id"], cred, logged_in);
+                    // if we logged in, lock, set logged_in to true and then unlock
+                    // start the verify online thread
+
+
+                    fmt::print("in login\n");
+
+                    updateCred(body["id"]);
+                    fmt::print("logged in\n");
+                    lock_logged.unlock();
+                    cv_logged.notify_one();
+
                     static std::thread vOnline(
-                            net::verifyOnline, std::ref(c),
-                            cred); // static otherwise the thread would terminate after the scope ends
-                } else throw ("Not logged in");
-            } catch (std::string errmsg){
+                            net::verifyOnline,
+                            std::ref(c)); // static otherwise the thread would terminate after the scope ends
+                }
+                else throw ("Not logged in");
+            }
+            catch (std::string errmsg){
                 fmt::print("err: {}", errmsg);
             }
         }
@@ -50,6 +68,14 @@ void net::readRes(net::UDPConn &c, int &cred, bool &logged_in) { // reads and ha
             auto new_c = chunk::Chunk(body, n-(idx+1));
             chunk::chunks.insert({new_c, NULL});
             fmt::print("Chunk: [{},{}]\n", (int)new_c.getCoords()[0], (int)new_c.getCoords()[1]);
+        }
+        else if (header["method"] == "post_player") {
+            // we dont care about the response
+            // either the player already exists, or we create them
+            fmt::print("player has been posted\n");
+            player_exists = true;
+            cv_plr.notify_one();
+            lock_posted.unlock();
         }
         if (header["method"] != "players") {
             //fmt::print("response: {}\n", (std::string) buffer);

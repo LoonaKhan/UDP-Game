@@ -12,7 +12,7 @@ add_executable(test_calls net/calls/tests/test.cpp net/calls/calls.cpp net/calls
 add_executable(test_models models/tests/test.cpp models/block/Block.h models/block/Block.cpp models/chunk/Chunk.h models/chunk/Chunk.cpp models/player/player.cpp models/player/player.h)
 
 # perlin noise gen
-add_executable(noise_gen tests/noise_gen/noise_gen.cpp net/core/core.cpp net/core/core.h net/calls/calls.cpp net/calls/calls.h models/chunk/Chunk.cpp models/chunk/Chunk.h models/block/Block.cpp models/block/Block.h models/player/player.cpp models/player/player.h models/block/BlockSprite.cpp models/block/BlockSprite.h globvars/globvars.h globvars/globvars.cpp)
+add_executable(noise_gen tests/noise_gen/noise_gen.cpp net/core/core.cpp net/core/core.h net/calls/calls.cpp net/calls/calls.h models/chunk/Chunk.cpp models/chunk/Chunk.h models/block/Block.cpp models/block/Block.h models/player/player.cpp models/player/player.h models/block/BlockSprite.cpp models/block/BlockSprite.h globvars/globvars.h globvars/globvars.cpp net/macros/macros.cpp net/macros/macros.cpp net/parser/parser.cpp net/parser/parser.h)
 
 
 # libraries
@@ -23,3 +23,4 @@ add_subdirectory(fmt)
 target_link_libraries(${TEST_CLIENT} fmt::fmt net sfml-graphics sfml-window sfml-system)
 target_link_libraries(test_calls fmt::fmt)
 target_link_libraries(test_models fmt::fmt)
+target_link_libraries(noise_gen fmt::fmt net sfml-graphics sfml-window sfml-system)
