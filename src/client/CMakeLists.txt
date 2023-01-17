@@ -1,26 +1,40 @@
 cmake_minimum_required(VERSION 3.22.1)
 set(CMAKE_CXX_STANDARD 17)
 
+# executables
 project(CLIENT)
 set(TEST_CLIENT test_client)
 
-add_executable(${PROJECT_NAME} main.cpp net/core/core.cpp net/core/core.h net/calls/calls.cpp net/calls/calls.h models/chunk/Chunk.cpp models/chunk/Chunk.h models/block/Block.cpp models/block/Block.h models/player/player.cpp models/player/player.h models/block/BlockSprite.cpp models/block/BlockSprite.h globvars/globvars.h globvars/globvars.cpp)
-add_executable(${TEST_CLIENT} tests/test-requests.cpp net/macros/macros.cpp net/macros/macros.h net/parser/parser.cpp net/parser/parser.h net/calls/calls.cpp net/calls/calls.h models/chunk/Chunk.cpp models/chunk/Chunk.h models/player/player.cpp models/player/player.h models/block/Block.cpp models/block/Block.h globvars/globvars.h globvars/globvars.cpp)
+# sources
+# makes it easier to write down sources
+set(GLOBVARS_PKG globvars/globvars.cpp globvars/globvars.h)
+set(MODELS_PKG models/block/Block.h models/block/Block.cpp models/chunk/Chunk.cpp models/chunk/Chunk.h models/player/player.cpp models/player/player.h)
+set(NET_PKG net/calls/calls.cpp net/calls/calls.h net/core/core.cpp net/core/core.h net/macros/macros.cpp net/macros/macros.h net/parser/parser.h net/parser/parser.cpp)
+set(SOURCES ${GLOBVARS_PKG} ${MODELS_PKG} ${NET_PKG})
+
+
+
+# executables
+add_executable(${PROJECT_NAME} main.cpp ${SOURCES}) # project
+add_executable(${TEST_CLIENT} tests/test-requests.cpp ${SOURCES}) # main test client
 
 # other tests
-add_executable(test_calls net/calls/tests/test.cpp net/calls/calls.cpp net/calls/calls.h)
+add_executable(test_calls net/calls/tests/test.cpp ${NET_PKG})
 add_executable(test_models models/tests/test.cpp models/block/Block.h models/block/Block.cpp models/chunk/Chunk.h models/chunk/Chunk.cpp models/player/player.cpp models/player/player.h)
 
 # perlin noise gen
-add_executable(noise_gen tests/noise_gen/noise_gen.cpp net/core/core.cpp net/core/core.h net/calls/calls.cpp net/calls/calls.h models/chunk/Chunk.cpp models/chunk/Chunk.h models/block/Block.cpp models/block/Block.h models/player/player.cpp models/player/player.h models/block/BlockSprite.cpp models/block/BlockSprite.h globvars/globvars.h globvars/globvars.cpp net/macros/macros.cpp net/macros/macros.cpp net/parser/parser.cpp net/parser/parser.h)
+add_executable(noise_gen tests/noise_gen/noise_gen.cpp ${SOURCES})
 
 
 # libraries
 add_subdirectory(fmt)
 
+# aliasing
+set(SFML_LIBS sfml-graphics sfml-window sfml-system sfml-audio)
+set(ALL_LIBS fmt::fmt net ${SFML_LIBS})
+
 # linking
-#target_link_libraries(${TEST_CLIENT} net)
-target_link_libraries(${TEST_CLIENT} fmt::fmt net sfml-graphics sfml-window sfml-system)
+target_link_libraries(${TEST_CLIENT} ${ALL_LIBS})
 target_link_libraries(test_calls fmt::fmt)
 target_link_libraries(test_models fmt::fmt)
-target_link_libraries(noise_gen fmt::fmt net sfml-graphics sfml-window sfml-system)
+target_link_libraries(noise_gen ${ALL_LIBS})
