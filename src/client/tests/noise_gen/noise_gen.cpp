@@ -14,6 +14,8 @@
 #include <thread>
 #include <condition_variable>
 #include <mutex>
+#include <chrono>
+#include <SFML/Graphics.hpp>
 
 #include "../../net/macros/macros.h"
 #include "../../net/calls/calls.h"
@@ -22,6 +24,8 @@
 #include "../../globvars/globvars.h"
 
 using namespace glob;
+using namespace std::chrono;
+using namespace std::this_thread;
 
 void getChunks(net::UDPConn &c) {
     // continuously requests chunks until they are all recieved.
@@ -80,9 +84,33 @@ int main() {
         static std::thread ReqChunks(getChunks, std::ref(c));
     }
 
+
+    //for (;;) {}
+
+    sf::RenderWindow window(sf::VideoMode(400,400),
+                            "CLIENT",
+                            sf::Style::Close | sf::Style::Resize);
+    sf::Clock clock;
     // draws the chunks
-    for (;;) {
+    while (window.isOpen()){
+        sf::Event evnt{};
+
+        while(window.pollEvent(evnt)) {
+            if (evnt.type == evnt.Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)){
+                window.close();
+            }
+        }
+
+        for (auto& [chunk, _] : chunk::chunks) {
+            for (auto& b : chunk.getBlocks().blocks) {
+                b.render(&window, chunk.getCoords());
+            }
+        }
+
+
+
+        window.display(); //move the back buffer to the front buffer
+        window.clear();
 
     }
-
 }

@@ -84,10 +84,19 @@ void chunkToBytesTest() {
     fmt::print("]\n");
 }
 
+void chunkCoordsTest(){
+    int coords[] = {1,0};
+    auto c = chunk::Chunk(coords);
+
+    //std::cout << c.getCoords()[0] <<" " << c.getCoords()[1] <<"\n";
+    fmt::print("[{}, {}]\n", (int)c.getCoords()[0], c.getCoords()[1]);
+}
+
 int main() {
     //blockConstructorTest();
     //chunkGetBlockTest();
     //chunkConstructorTest();
     //chunkResConstructorTest();
     //chunkToBytesTest();
+    chunkCoordsTest();
 }

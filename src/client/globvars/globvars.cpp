@@ -21,5 +21,10 @@ namespace glob {
     bool logged_in = false;
     int cred;
 
+    std::mutex Mchunk_list;
+    std::mutex *Mchunk_list_ptr = &Mchunk_list;
+    std::condition_variable cv_chunks;
+    bool cswitch_turns = false;
+
 
 }

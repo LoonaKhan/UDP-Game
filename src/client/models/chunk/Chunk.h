@@ -49,9 +49,9 @@ namespace chunk {
         ByteArr toBytes();
 
         // getters
-        int* getCoords();
+        int* getCoords()const ;
 
-        block::BlockArray getBlocks();
+        block::BlockArray getBlocks() const;
 
         int getBlocksLen();
 

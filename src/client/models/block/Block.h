@@ -24,7 +24,7 @@ namespace block {
 
         Block(); // blank constructor so we can make block arrays
 
-        void render(sf::RenderWindow *window); // renders the block to the screen
+        void render(sf::RenderWindow *window, int chunk[2]); // renders the block to the screen
 
         // getters
         char* getCoords();

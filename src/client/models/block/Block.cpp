@@ -17,12 +17,12 @@ namespace block {
         this->setColor(sf::Color(c[0], c[1], c[2]));
 
         this->setScale(5, 5); //todo: get size
-        // position
     }
 
     Block::Block() {}
 
-    void Block::render(sf::RenderWindow *window) {
+    void Block::render(sf::RenderWindow *window, int *chunk) {
+        this->setPosition((float)chunk[0] + this->coords[0], (float)chunk[1] + this->coords[1]);
         window->draw(*this);
     }
 

@@ -36,5 +36,5 @@ set(ALL_LIBS fmt::fmt net ${SFML_LIBS})
 # linking
 target_link_libraries(${TEST_CLIENT} ${ALL_LIBS})
 target_link_libraries(test_calls fmt::fmt)
-target_link_libraries(test_models fmt::fmt)
+target_link_libraries(test_models fmt::fmt ${SFML_LIBS})
 target_link_libraries(noise_gen ${ALL_LIBS})

@@ -27,6 +27,11 @@ namespace glob{
     extern bool logged_in;
     extern int cred;
 
+    extern std::mutex Mchunk_list;
+    extern std::mutex *Mchunk_list_ptr;
+    extern std::condition_variable cv_chunks;
+    extern bool cswitch_turns;
+
 
 }
 

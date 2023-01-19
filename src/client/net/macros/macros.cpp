@@ -64,10 +64,11 @@ void net::readRes(net::UDPConn &c) { // reads and handle the responses from the 
             }
         }
         else if (header["method"] == "get_chunk") { // recieves a chunk and appends it
+
             char *body = buffer + idx+1;
             auto new_c = chunk::Chunk(body, n-(idx+1));
             chunk::chunks.insert({new_c, NULL});
-            fmt::print("Chunk: [{},{}]\n", (int)new_c.getCoords()[0], (int)new_c.getCoords()[1]);
+            fmt::print("Chunk: [{},{}]\n", new_c.getCoords()[0], new_c.getCoords()[1]);
         }
         else if (header["method"] == "post_player") {
             // we dont care about the response

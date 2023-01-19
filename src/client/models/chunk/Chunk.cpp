@@ -67,7 +67,7 @@ namespace chunk {
         return sizeof(this->blocks) / sizeof(this->blocks[0]);
     }
 
-    block::BlockArray Chunk::getBlocks() { //
+    block::BlockArray Chunk::getBlocks() const { //
         block::BlockArray b_arr;
         for (int i=0; i<b_arr.len ; i++) {
             b_arr.blocks[i] = this->blocks[i];
@@ -75,8 +75,9 @@ namespace chunk {
         return b_arr;
     }
 
-    int *Chunk::getCoords(){
-        return this->coords;
+    int *Chunk::getCoords() const {
+        static int ret[2]{this->coords[0], this->coords[1]};
+        return ret;
     }
 
     std::map<Chunk, int64_t> chunks; // stores chunks using an array of their coords as a key
