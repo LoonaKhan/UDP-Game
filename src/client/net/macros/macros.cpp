@@ -67,8 +67,12 @@ void net::readRes(net::UDPConn &c) { // reads and handle the responses from the 
 
             char *body = buffer + idx+1;
             auto new_c = chunk::Chunk(body, n-(idx+1));
-            chunk::chunks.insert({new_c, NULL});
-            fmt::print("Chunk: [{},{}]\n", new_c.getCoords()[0], new_c.getCoords()[1]);
+            chunk::chunks.insert({std::vector<int>{new_c.getCoords()[0], new_c.getCoords()[1]}, new_c});
+            fmt::print("Chunk: [{},{}] | [{}] | {}\n",
+                       new_c.getCoords()[0], new_c.getCoords()[1],
+                       (int)new_c.getBlock(new char[]{0,0}).getColour(),
+                       chunk::chunks.size()
+                       );
         }
         else if (header["method"] == "post_player") {
             // we dont care about the response

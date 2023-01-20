@@ -75,12 +75,11 @@ namespace chunk {
         return b_arr;
     }
 
-    int *Chunk::getCoords() const {
-        static int ret[2]{this->coords[0], this->coords[1]};
-        return ret;
+    int *Chunk::getCoords() {
+        return this->coords;
     }
 
-    std::map<Chunk, int64_t> chunks; // stores chunks using an array of their coords as a key
+    std::map<std::vector<int>, Chunk> chunks; // stores chunks using an array of their coords as a key
 
     Chunk::Chunk() {}
 

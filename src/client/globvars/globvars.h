@@ -33,6 +33,9 @@ namespace glob{
     extern bool cswitch_turns;
 
 
+    // graphical
+    extern const int BLOCK_SIZE;
+    extern const int CHUNK_SIZE;
 }
 
 

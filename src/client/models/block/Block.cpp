@@ -14,15 +14,19 @@ namespace block {
         this->setPosition((float)this->coords[0], (float)this->coords[1]);
 
         auto c = colours[this->colour];
-        this->setColor(sf::Color(c[0], c[1], c[2]));
+        this->setFillColor(sf::Color(c[0], c[1], c[2]));
 
-        this->setScale(5, 5); //todo: get size
+        this->setSize(sf::Vector2f(BLOCK_SIZE,BLOCK_SIZE)); //todo: get size
+        this->setOrigin(BLOCK_SIZE/2,BLOCK_SIZE/2);
     }
 
     Block::Block() {}
 
     void Block::render(sf::RenderWindow *window, int *chunk) {
-        this->setPosition((float)chunk[0] + this->coords[0], (float)chunk[1] + this->coords[1]);
+        this->setPosition(
+                (((float)chunk[0] * CHUNK_SIZE) + this->coords[0])* BLOCK_SIZE,
+                (((float)chunk[1] * CHUNK_SIZE) + this->coords[1])* BLOCK_SIZE
+                );
         window->draw(*this);
     }
 

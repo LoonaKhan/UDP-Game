@@ -6,12 +6,14 @@
 
 #include <nlohmann/json.hpp>
 #include <SFML/Graphics.hpp>
+#include "../../globvars/globvars.h"
 
 using json = nlohmann::json;
+using namespace glob;
 
 namespace block {
 
-    class Block : sf::Sprite{
+    class Block : sf::RectangleShape{
     private: // priv attributes
         char coords[2]; // relative to their chunk
         char colour, height;

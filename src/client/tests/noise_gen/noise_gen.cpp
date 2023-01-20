@@ -16,6 +16,7 @@
 #include <mutex>
 #include <chrono>
 #include <SFML/Graphics.hpp>
+#include <fstream>
 
 #include "../../net/macros/macros.h"
 #include "../../net/calls/calls.h"
@@ -30,19 +31,11 @@ using namespace std::this_thread;
 void getChunks(net::UDPConn &c) {
     // continuously requests chunks until they are all recieved.
     // todo: if not all chunks have been recieved, this will unnecessarily call more. optimize
-    for (;;) {
-        if (logged_in && chunk::chunks.size() < 256) {
-            for (int x=0; x<glob::RENDER_DIST; x++)
-                for (int y=0; y < glob::RENDER_DIST; y++) {
-                    int coords[] = {x,y};
-                    c.send(net::get_chunk(cred, coords));
-                }
+    for (int x=0; x<glob::RENDER_DIST; x++)
+        for (int y=0; y < glob::RENDER_DIST; y++) {
+            int coords[] = {x,y};
+            c.send(net::get_chunk(cred, coords));
         }
-        else if (chunk::chunks.size() == 256) {
-            fmt::print("size of chunks: {}\n", chunk::chunks.size());
-            return;
-        };
-    }
 }
 
 int main() {
@@ -87,21 +80,33 @@ int main() {
 
     //for (;;) {}
 
-    sf::RenderWindow window(sf::VideoMode(400,400),
+    sf::RenderWindow window(sf::VideoMode(1920,1080),
                             "CLIENT",
                             sf::Style::Close | sf::Style::Resize);
-    sf::Clock clock;
+    //sf::Clock clock;
     // draws the chunks
     while (window.isOpen()){
         sf::Event evnt{};
 
         while(window.pollEvent(evnt)) {
             if (evnt.type == evnt.Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)){
+                std::ofstream f("chunks.txt");
+                for (auto& [coords, chunk] : chunk::chunks)
+                {
+                    f << "[";
+                    for (char i : chunk.toBytes().bytes) {
+                        f << (int)i << " ";
+                    }
+                    f << "]\n";
+                }std::cout << "wrote\n";
+
                 window.close();
             }
         }
 
-        for (auto& [chunk, _] : chunk::chunks) {
+        window.clear(sf::Color::Black);
+
+        for (auto& [coords, chunk] : chunk::chunks) {
             for (auto& b : chunk.getBlocks().blocks) {
                 b.render(&window, chunk.getCoords());
             }
@@ -110,7 +115,6 @@ int main() {
 
 
         window.display(); //move the back buffer to the front buffer
-        window.clear();
 
     }
 }

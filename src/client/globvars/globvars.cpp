@@ -27,4 +27,6 @@ namespace glob {
     bool cswitch_turns = false;
 
 
+    const int BLOCK_SIZE = 5;
+    const int CHUNK_SIZE = 16;
 }

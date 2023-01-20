@@ -9,6 +9,7 @@
 #include <map>
 #include <iostream>
 #include "../block/Block.h"
+#include <vector>
 
 using json = nlohmann::json;
 
@@ -49,7 +50,8 @@ namespace chunk {
         ByteArr toBytes();
 
         // getters
-        int* getCoords()const ;
+
+        int* getCoords();
 
         block::BlockArray getBlocks() const;
 
@@ -69,6 +71,6 @@ namespace chunk {
 
     };
 
-    extern std::map<Chunk, int64_t> chunks; // stores chunks using an array of their coords as a key
+    extern std::map<std::vector<int>, Chunk> chunks; // stores chunks using an array of their coords as a key
 
 } // chunk
