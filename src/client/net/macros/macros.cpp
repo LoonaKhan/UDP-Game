@@ -68,9 +68,8 @@ void net::readRes(net::UDPConn &c) { // reads and handle the responses from the 
             char *body = buffer + idx+1;
             auto new_c = chunk::Chunk(body, n-(idx+1));
             chunk::chunks.insert({std::vector<int>{new_c.getCoords()[0], new_c.getCoords()[1]}, new_c});
-            fmt::print("Chunk: [{},{}] | [{}] | {}\n",
+            fmt::print("Chunk: [{},{}] | {}\n",
                        new_c.getCoords()[0], new_c.getCoords()[1],
-                       (int)new_c.getBlock(new char[]{0,0}).getColour(),
                        chunk::chunks.size()
                        );
         }
@@ -83,7 +82,7 @@ void net::readRes(net::UDPConn &c) { // reads and handle the responses from the 
             lock_posted.unlock();
         }
         if (header["method"] != "players") {
-            //fmt::print("response: {}\n", (std::string) buffer);
+            fmt::print("response({}): {}\n", n, (std::string) buffer);
         }
     }
 }

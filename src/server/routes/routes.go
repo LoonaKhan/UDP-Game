@@ -43,12 +43,16 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		}
 
 		// search for that chunk
+		//db.ConnMut.Lock()
 		var chunk c.Chunk
 		if db.Conn.First(&chunk, "x = ? AND y = ?", coords["coords"][0], coords["coords"][1]).Error != nil {
 			// if no chunk is found, create one
 			chunk = c.Init(coords["coords"][0], coords["coords"][1])
 			db.Conn.Create(&chunk)
 		}
+		//db.ConnMut.Unlock()
+
+		c.WriteChunk(&c.CfileMut, c.ChunksFile, chunk.ToBytes())
 
 		header.Code = true
 		res := nu.FormatResBinary(chunk.ToBytes(), header)
@@ -89,6 +93,7 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 			* server updates that chunk and sets it to all players within render distance of that chunk.
 
 			todo: make this only update the given block?
+				might need a mutex
 			* */
 		if !(a.Matches(header.Cred, addr)) { // client credentials must match
 			fmt.Println("denied")

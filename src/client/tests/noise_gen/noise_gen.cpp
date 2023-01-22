@@ -31,11 +31,14 @@ using namespace std::this_thread;
 void getChunks(net::UDPConn &c) {
     // continuously requests chunks until they are all recieved.
     // todo: if not all chunks have been recieved, this will unnecessarily call more. optimize
-    for (int x=0; x<glob::RENDER_DIST; x++)
-        for (int y=0; y < glob::RENDER_DIST; y++) {
-            int coords[] = {x,y};
-            c.send(net::get_chunk(cred, coords));
-        }
+    for (;;){
+        if (chunk::chunks.size() < 256)
+            for (int x = 0; x < glob::RENDER_DIST; x++)
+                for (int y = 0; y < glob::RENDER_DIST; y++) {
+                    int coords[] = {x, y};
+                    c.send(net::get_chunk(cred, coords));
+                }
+    }
 }
 
 int main() {
@@ -111,9 +114,6 @@ int main() {
                 b.render(&window, chunk.getCoords());
             }
         }
-
-
-
         window.display(); //move the back buffer to the front buffer
 
     }

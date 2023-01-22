@@ -6,6 +6,7 @@ import (
 
 func Handle(err error) { // panics. standalone good for fatal errors
 	if err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
 }

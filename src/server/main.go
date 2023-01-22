@@ -67,7 +67,7 @@ func main() {
 		err_handling.Handle(err)
 
 		if conf.DEBUG {
-			fmt.Println(string(buffer))
+			//fmt.Println(string(buffer))
 		}
 
 		// ensures the request is formatted properly
