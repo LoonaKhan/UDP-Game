@@ -2,7 +2,6 @@ package blocks
 
 import (
 	"gorm.io/gorm"
-	c "server/db/models/chunks"
 	gv "server/globvars"
 )
 
@@ -36,7 +35,7 @@ type Block struct {
 	Noise float64 // the perlin noise value of the block. we use it to determine other things
 
 	ChunkID int `json:"chunkID"` // the chunk they belong to todo: remove the json tag
-	Chunk   c.Chunk
+	//Chunk   c.Chunk
 }
 
 func Init(x byte, y byte, cx, cy float64) Block {

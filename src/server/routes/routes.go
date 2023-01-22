@@ -7,6 +7,7 @@ import (
 	a "server/addys"
 	"server/conf"
 	"server/db"
+	b "server/db/models/blocks"
 	c "server/db/models/chunks"
 	p "server/db/models/players"
 	"server/err_handling"
@@ -43,14 +44,19 @@ var Methods = map[string]func(buffer []byte, conn *net.UDPConn, addr *net.UDPAdd
 		}
 
 		// search for that chunk
-		//db.ConnMut.Lock()
+		db.ConnMut.Lock()
 		var chunk c.Chunk
 		if db.Conn.First(&chunk, "x = ? AND y = ?", coords["coords"][0], coords["coords"][1]).Error != nil {
 			// if no chunk is found, create one
 			chunk = c.Init(coords["coords"][0], coords["coords"][1])
 			db.Conn.Create(&chunk)
+		} else { // if the chunk exists, search for its blocks
+			// gorm does not do joins by default, so we must seperately retrieve them
+			var blocks []b.Block
+			db.Conn.Model(&chunk).Association("Blocks").Find(&blocks)
+			chunk.Blocks = blocks
 		}
-		//db.ConnMut.Unlock()
+		db.ConnMut.Unlock()
 
 		c.WriteChunk(&c.CfileMut, c.ChunksFile, chunk.ToBytes())
 
