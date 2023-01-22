@@ -45,8 +45,6 @@ func main() {
 	// we connect to the db and handle its error if any
 	err_handling.Handle(db.Conn_err)
 	err_handling.Handle(db.Conn.AutoMigrate(&p.Player{}, &c.Chunk{}, &b.Block{}))
-	/*err_handling.Handle(db.Conn.AutoMigrate(&c.Chunk{}))
-	err_handling.Handle(db.Conn.AutoMigrate(&b.Block{}))*/
 
 	// fills up the address channel
 	a.AddyChan <- map[uint]a.Client{}

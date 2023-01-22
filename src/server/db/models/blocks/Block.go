@@ -53,7 +53,10 @@ func Init(x byte, y byte, cx, cy float64) Block {
 }
 
 func (b *Block) genNoise(x, y float64) {
-	b.Noise = gv.P.Noise2D((x+float64(b.X))/10, (y+float64(b.Y))/10)
+	b.Noise = gv.P.Noise2D(
+		((x*gv.CHUNK_SIZE)+float64(b.X))/10,
+		((y*gv.CHUNK_SIZE)+float64(b.Y))/10,
+	)
 }
 
 func (b *Block) genColour() {

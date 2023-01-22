@@ -3,3 +3,5 @@ concepts/server/go.sum
 .idea
 *~
 *.sqlite*
+chunks.txt
+src/server/chunks.txt
