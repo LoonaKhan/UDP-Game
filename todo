@@ -1,11 +1,15 @@
 go server:
+    terrain generation
+        finetune a little more
+            better biome calcs
+            mushroom fields
+            tundra
+            desert
+        not based on range, but on properties of the number?
+            minecraft?
     post_chunk_updates ignores the player who sent data
+        only modify a block
     prevents players from moving faster than legally possible
-    database issues
-        performance
-        "too many open files"
-    seed for each world
-        randomly determined by the server on first start?
     security/optimizations
         tick system(TPS)?
         header is reduced to bytes (less overhead)
@@ -15,28 +19,19 @@ go server:
             timestamp: short?
                 server time?
         ignores ddosing stuffs
-
+    test with many clients
+    
 
 cpp client:
-    test client
-        graphics
-    routes and communications with the server
-    perlin noise testing
-        colour based on: seed, x, y
-        height: seed, x, y, colour      // shrink 4 vars into 1?
-    multithreading review
-        comm with server
-        render
-        generation?
-    terrain
-        biomes:
-            mushroom fields, plains, desert, tundra
-        height:
-            valley, flat, mountains
+    player and movement
+        all chunks and objects onscreen are drawn based off an offset. that offset is the player pos
+    show other players 
+    players store snapshots from the server.
+        fill up the snapshots a bit
+        always be a few seconds late
     cmake: net lib is built upon building any executable
     seperate home/game screens?
         if logged_in, show game screen, else home
-        
 
 note:
     on the client side, the player continuously moves and does stuff, meanwhile, it updates the server on another thread and corrects the player if its position is inaccurate
