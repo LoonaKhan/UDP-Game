@@ -84,6 +84,8 @@ int main() {
                             "CLIENT",
                             sf::Style::Close | sf::Style::Resize);
     //sf::Clock clock;
+    int plrCoords[2] = {0,0};
+    sf::Clock clock;
     // draws the chunks
     while (window.isOpen()){
         sf::Event evnt{};
@@ -106,11 +108,31 @@ int main() {
 
         window.clear(sf::Color::Black);
 
-        for (auto& [coords, chunk] : chunk::chunks) {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
+            plrCoords[1]++;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+            plrCoords[1]--;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
+            plrCoords[0]++;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+            plrCoords[0]--;
+
+       for (auto& [coords, chunk] : chunk::chunks) {
             for (auto& b : chunk.getBlocks().blocks) {
-                b.render(&window, chunk.getCoords());
+                b.render(&window, chunk.getCoords(), plrCoords);
             }
         }
+
+       /*
+        * todo: implement debug info
+        *   current chunk, block
+        *   fps, frame time
+        *   chunks loaded
+        *   blocks loaded
+        *   networking?
+        *   TPS?
+        * */
+
         window.display(); //move the back buffer to the front buffer
 
     }

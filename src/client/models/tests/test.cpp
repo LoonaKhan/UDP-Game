@@ -7,6 +7,7 @@
 #include "../player/player.h"
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <SFML/Graphics.hpp>
 #include "iostream"
 
 using json = nlohmann::json;
@@ -92,11 +93,38 @@ void chunkCoordsTest(){
     fmt::print("[{}, {}]\n", (int)c.getCoords()[0], c.getCoords()[1]);
 }
 
+void chunkDrawTest(){
+    int coords[] = {0,0};
+    auto c = chunk::Chunk(coords);
+    sf::RenderWindow window(sf::VideoMode(1920,1080),
+                            "CLIENT",
+                            sf::Style::Close | sf::Style::Resize);
+
+    while (window.isOpen()){
+        sf::Event evnt{};
+
+        while(window.pollEvent(evnt)) {
+            if (evnt.type == evnt.Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)){
+                window.close();
+            }
+        }
+
+        /*for (auto &b: c.getBlocks().blocks) {
+            b.render(&window, c.getCoords());
+        }*/
+    }
+
+    window.clear();
+    window.display();
+    //window.clear();
+}
+
 int main() {
     //blockConstructorTest();
     //chunkGetBlockTest();
     //chunkConstructorTest();
     //chunkResConstructorTest();
     //chunkToBytesTest();
-    chunkCoordsTest();
+    //chunkCoordsTest();
+    chunkDrawTest();
 }
