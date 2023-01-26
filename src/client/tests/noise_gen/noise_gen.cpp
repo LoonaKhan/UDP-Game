@@ -28,16 +28,6 @@ using namespace glob;
 using namespace std::chrono;
 using namespace std::this_thread;
 
-void getChunks(net::UDPConn &c) {
-    // continuously requests chunks until they are all recieved.
-    // todo: if not all chunks have been recieved, this will unnecessarily call more. optimize
-    for (int x = 0; x < glob::RENDER_DIST; x++)
-        for (int y = 0; y < glob::RENDER_DIST; y++) {
-            int coords[] = {x, y};
-            c.send(net::get_chunk(cred, coords));
-        }
-}
-
 int main() {
     /*
      * posts player and logs in.
@@ -53,6 +43,11 @@ int main() {
     char HOST[] = "127.0.0.1";
     int PORT = 4000;
     auto c = net::UDPConn(HOST, PORT);
+
+    // player coords
+    float plrCoords[2] = {0,0};
+    int curChunk[2];
+    int prevChunk[2];
 
     std::thread listener(net::readRes, std::ref(c)); // recieves bytes
 
@@ -74,22 +69,20 @@ int main() {
         std::unique_lock l_logged_in(*Mlogged_in_ptr);
         fmt::print("waiting on log in thread to start req'ing chunks\n");
         cv_logged.wait(l_logged_in, []{return logged_in;});
-        static std::thread ReqChunks(getChunks, std::ref(c));
+        static std::thread ReqChunks(net::reqChunks, std::ref(c), std::ref(plrCoords));
+        //static std::thread DelChunks(net::delChunks, std::ref(c), std::ref(plrCoords));
     }
 
 
-    //for (;;) {}
-
+    // setup SFML stuff
     sf::RenderWindow window(sf::VideoMode(1920,1080),
                             "CLIENT",
                             sf::Style::Close | sf::Style::Resize);
-    //sf::Clock clock;
-    int plrCoords[2] = {0,0};
     sf::Clock clock;
+
     // draws the chunks
     while (window.isOpen()){
         sf::Event evnt{};
-
         while(window.pollEvent(evnt)) {
             if (evnt.type == evnt.Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)){
                 std::ofstream f("chunks.txt");
@@ -101,27 +94,30 @@ int main() {
                     }
                     f << "]\n";
                 }std::cout << "wrote\n";
-
                 window.close();
             }
         }
 
-        window.clear(sf::Color::Black);
-
+        float walk_speed = 0.3;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-            plrCoords[1]++;
+            plrCoords[1]+=walk_speed;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
-            plrCoords[1]--;
+            plrCoords[1]-=walk_speed;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-            plrCoords[0]++;
+            plrCoords[0]+=walk_speed;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
-            plrCoords[0]--;
+            plrCoords[0]-=walk_speed;
 
-       for (auto& [coords, chunk] : chunk::chunks) {
-            for (auto& b : chunk.getBlocks().blocks) {
+        /*prevChunk[0] = curChunk[0]; prevChunk[1] = curChunk[1];
+        chunk::Chunk::UpdateCurrentChunk(plrCoords, curChunk);
+        if (prevChunk[0] != curChunk[0] || prevChunk[1] != curChunk[1]){
+            static std::thread ReqChunks(net::reqChunks, std::ref(c), std::ref(plrCoords));
+            static std::thread DelChunks(net::delChunks, std::ref(c), std::ref(plrCoords));
+        }*/
+
+       for (auto& [coords, chunk] : chunk::chunks)
+            for (auto& b : chunk.getBlocks().blocks)
                 b.render(&window, chunk.getCoords(), plrCoords);
-            }
-        }
 
        /*
         * todo: implement debug info
@@ -132,8 +128,9 @@ int main() {
         *   networking?
         *   TPS?
         * */
-
         window.display(); //move the back buffer to the front buffer
+        window.clear();
 
+        fmt::print("FPS: {}\n", (int)1/(clock.restart().asSeconds()));
     }
 }
