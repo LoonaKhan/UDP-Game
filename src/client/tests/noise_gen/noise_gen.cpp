@@ -46,8 +46,8 @@ int main() {
 
     // player coords
     float plrCoords[2] = {0,0};
-    int curChunk[2];
-    int prevChunk[2];
+    std::vector<int> curChunk = {0,0};
+    std::vector<int> prevChunk;
 
     std::thread listener(net::readRes, std::ref(c)); // recieves bytes
 
@@ -108,9 +108,10 @@ int main() {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
             plrCoords[0]-=walk_speed;
 
-        /*prevChunk[0] = curChunk[0]; prevChunk[1] = curChunk[1];
-        chunk::Chunk::UpdateCurrentChunk(plrCoords, curChunk);
-        if (prevChunk[0] != curChunk[0] || prevChunk[1] != curChunk[1]){
+        /*prevChunk = curChunk;
+        curChunk = chunk::Chunk::toChunkCoords(plrCoords);
+        fmt::print("prev: [{}, {}] cur:[{}, {}]\n", prevChunk[0], prevChunk[1], curChunk[0], curChunk[1]);
+        if (prevChunk != curChunk){
             static std::thread ReqChunks(net::reqChunks, std::ref(c), std::ref(plrCoords));
             static std::thread DelChunks(net::delChunks, std::ref(c), std::ref(plrCoords));
         }*/
@@ -131,6 +132,6 @@ int main() {
         window.display(); //move the back buffer to the front buffer
         window.clear();
 
-        fmt::print("FPS: {}\n", (int)1/(clock.restart().asSeconds()));
+        //fmt::print("FPS: {}\n", (int)1/(clock.restart().asSeconds()));
     }
 }

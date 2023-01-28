@@ -18,8 +18,8 @@ namespace chunk {
     }
 
     Chunk::Chunk(char *buffer, int len)
-    : coords{buffer[0] + (buffer[1]<<8) + (buffer[2] << 16) + (buffer[3] << 24),
-             buffer[4] + (buffer[5]<<8) + (buffer[6] << 16) + (buffer[7] << 24)} {
+    : coords{buffer[0] | (buffer[1]<<8) | (buffer[2] << 16) | (buffer[3] << 24),
+             buffer[4] | (buffer[5]<<8) | (buffer[6] << 16) | (buffer[7] << 24)} {
 
         for (int b_idx=8, i=0; // b_idx is the index of the buffer, i is the index of this->blocks
                 b_idx < len;
@@ -82,5 +82,38 @@ namespace chunk {
     std::map<std::vector<int>, Chunk> chunks; // stores chunks using an array of their coords as a key
 
     Chunk::Chunk() {}
+
+    std::map<std::vector<int>, int*> Chunk::getRenderDistChunks(float *plrCoords) {
+        std::map<std::vector<int>, int*> ret;
+        auto curChunk = toChunkCoords(plrCoords);
+        std::cout << "x0: " <<  curChunk[0] - RENDER_DIST
+            << " x1: " << curChunk[0] + RENDER_DIST <<
+            " y0: " << curChunk[1] - RENDER_DIST <<
+            " y1: " << curChunk[1] + RENDER_DIST<< "\n";
+
+        /*
+         * take the render distance and subtract it from plrCoords[0,1] and iterate until we reach plrCoords+render dist
+         * append each entry
+         */
+        for (int x=curChunk[0]- RENDER_DIST; x < curChunk[0] + RENDER_DIST; x++)
+            for (int y=curChunk[1] - RENDER_DIST; y < curChunk[1] + RENDER_DIST; y++)
+                ret.insert({std::vector<int>{x, y}, nullptr});
+        return ret;
+    }
+
+    std::vector<int> Chunk::toChunkCoords(float* plrCoords) {
+        /*
+         * Determines what chunk the player is in.
+         *
+         * divide player coords  by RENDER_DISTANCE. if negative, subtract 1
+         */
+        std::vector<int> curChunk;
+        for (int i=0; i < 2; i++) {
+            curChunk.push_back(int(plrCoords[i] / RENDER_DIST));
+            if (curChunk[i] < 0)
+                curChunk[i]--;
+        }
+        return curChunk;
+    }
 
 } // chunk

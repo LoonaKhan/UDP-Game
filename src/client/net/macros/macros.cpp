@@ -30,6 +30,7 @@ void net::readRes(net::UDPConn &c) { // reads and handle the responses from the 
         // locks
         std::unique_lock lock_logged(*Mlogged_in_ptr);
         std::unique_lock lock_posted(*Mposted_plr_ptr);
+        std::unique_lock lock_chunks(*MChunks_ptr);
 
         // parse header
         int idx = net::seperate(buffer, '|');
@@ -67,11 +68,13 @@ void net::readRes(net::UDPConn &c) { // reads and handle the responses from the 
 
             char *body = buffer + idx+1;
             auto new_c = chunk::Chunk(body, n-(idx+1));
+
             chunk::chunks.insert({std::vector<int>{new_c.getCoords()[0], new_c.getCoords()[1]}, new_c});
-            fmt::print("Chunk: [{},{}] | {}\n",
+            lock_chunks.unlock(); //technically dont need this
+            /*fmt::print("Chunk: [{},{}] | {}\n",
                        new_c.getCoords()[0], new_c.getCoords()[1],
                        chunk::chunks.size()
-                       );
+                       );*/
         }
         else if (header["method"] == "post_player") {
             // we dont care about the response
@@ -82,7 +85,56 @@ void net::readRes(net::UDPConn &c) { // reads and handle the responses from the 
             lock_posted.unlock();
         }
         if (header["method"] != "players") {
-            fmt::print("response({}): {}\n", n, (std::string) buffer);
+            //fmt::print("response({}): {}\n", n, (std::string) buffer);
+        }
+    }
+}
+
+void net::reqChunks(net::UDPConn &c, float *plrCoords) {
+    /*
+     * Requests chunks.
+     *
+     * used whenever the player moves into a different chunk
+     *
+     * Given a set of player coordinates, determine all chunks within render distance
+     * for all chunks in render distance, determine if it already exists
+     * if not, request it from the server
+     */
+
+    // determines chunks in render dist
+    auto rdChunks = chunk::Chunk::getRenderDistChunks(plrCoords);
+
+    // checks if those render distance chunks are inside chunks
+    // if not, request them
+    std::unique_lock lChunks(*MChunks_ptr); // lock chunks first
+    for (auto [chnk, _] : rdChunks) {
+        if (chunk::chunks.find(chnk) == chunk::chunks.end()) { // can it find vectors?
+            int reqC[] = {chnk[0], chnk[1]};
+            c.send(net::get_chunk(cred,reqC));
+        }
+    }
+
+}
+
+void net::delChunks(net::UDPConn &c, float *plrCoords) {
+    /*
+     * Deletes chunks
+     *
+     * Used whenever the player moves into a different chunk
+     *
+     * Given a set of player coordinates, determine all chunks in render distance
+     * for all existing chunks, determine if they are in render distance
+     * if not, delete them
+     */
+
+    // determines all chunks in render dist
+    auto renderDistChunks = chunk::Chunk::getRenderDistChunks(plrCoords);
+
+    // check if existing chunks are in render distance
+    std::unique_lock lChunks(*MChunks_ptr);
+    for (auto [coords, chunk] : chunk::chunks){
+        if (renderDistChunks.find(coords) == renderDistChunks.end()) {
+            chunk::chunks.erase(coords);
         }
     }
 }

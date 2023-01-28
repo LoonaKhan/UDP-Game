@@ -67,6 +67,11 @@ namespace chunk {
             return this->coords[0] < other.coords[0];
         }
 
+        // we return a map since we will need to search through the render distance chunks
+        static std::map<std::vector<int>, int*> getRenderDistChunks(float *plrCoords);
+
+        static std::vector<int> toChunkCoords(float* plrCoords);
+
     private: // methods
 
     };

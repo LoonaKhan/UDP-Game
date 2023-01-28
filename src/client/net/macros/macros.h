@@ -12,6 +12,7 @@
 #include "../parser/parser.h"
 #include "../../models/chunk/Chunk.h"
 #include "../../globvars/globvars.h"
+#include "../calls/calls.h"
 
 using namespace std::this_thread; // sleep_for, sleep_until
 using namespace std::chrono; // nanoseconds, system_clock, seconds
@@ -23,5 +24,9 @@ namespace net {
     void readRes(net::UDPConn &c);
 
     void updateCred(int id);
+
+    void reqChunks(net::UDPConn &c, float *plrCoords);
+
+    void delChunks(net::UDPConn &c, float *plrCoords);
 
 }
