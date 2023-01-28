@@ -45,3 +45,20 @@ post, get chunks and post_chunk_updates(both ways) are all sent in binary.
         chunk in render dist?
             yes: update sql
             no: ignore 
+
+
+
+
+drops/structures
+  chunk based
+  choose a block to place it on
+
+  cover
+    coords 
+  ammo
+    coords
+      1 char. 2^4 each
+    how much
+      1 char. 
+
+
