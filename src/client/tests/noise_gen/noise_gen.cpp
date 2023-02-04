@@ -47,7 +47,7 @@ int main() {
     // player coords
     float plrCoords[2] = {0,0};
     std::vector<int> curChunk = {0,0};
-    std::vector<int> prevChunk;
+    std::vector<int> prevChunk = {0,0};
 
     std::thread listener(net::readRes, std::ref(c)); // recieves bytes
 
@@ -108,15 +108,26 @@ int main() {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
             plrCoords[0]-=walk_speed;
 
-        /*prevChunk = curChunk;
-        curChunk = chunk::Chunk::toChunkCoords(plrCoords);
-        fmt::print("prev: [{}, {}] cur:[{}, {}]\n", prevChunk[0], prevChunk[1], curChunk[0], curChunk[1]);
-        if (prevChunk != curChunk){
-            static std::thread ReqChunks(net::reqChunks, std::ref(c), std::ref(plrCoords));
-            static std::thread DelChunks(net::delChunks, std::ref(c), std::ref(plrCoords));
-        }*/
 
-       for (auto& [coords, chunk] : chunk::chunks)
+        curChunk = chunk::Chunk::toChunkCoords(plrCoords);
+        //fmt::print("Current chunk: [{}, {}]\n", curChunk[0], curChunk[1]);
+        if (prevChunk != curChunk){ // verify these are sent
+            int int_plr_coords[]{(int)plrCoords[0], (int)plrCoords[1]};
+            c.send(net::update_pos(cred, int_plr_coords)); // todo: pos updates every movement, not frame
+
+            // requires threads to be joined.
+            // todo: try locking these?
+            fmt::print("calling threads\n");
+            std::thread ReqChunks(net::reqChunks, std::ref(c), std::ref(plrCoords));
+            std::thread DelChunks(net::delChunks, std::ref(c), std::ref(plrCoords));
+            ReqChunks.join();
+            DelChunks.join();
+
+            fmt::print("called all threads\n");
+            prevChunk = curChunk;
+        }
+        
+        for (auto& [coords, chunk] : chunk::chunks)
             for (auto& b : chunk.getBlocks().blocks)
                 b.render(&window, chunk.getCoords(), plrCoords);
 
@@ -131,6 +142,8 @@ int main() {
         * */
         window.display(); //move the back buffer to the front buffer
         window.clear();
+
+        window.setFramerateLimit(60);
 
         //fmt::print("FPS: {}\n", (int)1/(clock.restart().asSeconds()));
     }

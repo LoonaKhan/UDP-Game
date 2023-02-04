@@ -67,10 +67,10 @@ namespace chunk {
         return sizeof(this->blocks) / sizeof(this->blocks[0]);
     }
 
-    block::BlockArray Chunk::getBlocks() const { //
+    block::BlockArray Chunk::getBlocks() { //
         block::BlockArray b_arr;
         for (int i=0; i<b_arr.len ; i++) {
-            b_arr.blocks[i] = this->blocks[i];
+            b_arr.blocks[i] = this->blocks[i]; // todo: crashes
         }
         return b_arr;
     }
@@ -83,13 +83,14 @@ namespace chunk {
 
     Chunk::Chunk() {}
 
+    // todo: needs to be based on the player's render dist
     std::map<std::vector<int>, int*> Chunk::getRenderDistChunks(float *plrCoords) {
         std::map<std::vector<int>, int*> ret;
         auto curChunk = toChunkCoords(plrCoords);
-        std::cout << "x0: " <<  curChunk[0] - RENDER_DIST
+        /*std::cout << "x0: " <<  curChunk[0] - RENDER_DIST
             << " x1: " << curChunk[0] + RENDER_DIST <<
             " y0: " << curChunk[1] - RENDER_DIST <<
-            " y1: " << curChunk[1] + RENDER_DIST<< "\n";
+            " y1: " << curChunk[1] + RENDER_DIST<< "\n";*/
 
         /*
          * take the render distance and subtract it from plrCoords[0,1] and iterate until we reach plrCoords+render dist

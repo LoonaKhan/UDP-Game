@@ -101,8 +101,10 @@ void net::reqChunks(net::UDPConn &c, float *plrCoords) {
      * if not, request it from the server
      */
 
+    fmt::print("in func\n");
     // determines chunks in render dist
     auto rdChunks = chunk::Chunk::getRenderDistChunks(plrCoords);
+    fmt::print("got all rd chunks\n");
 
     // checks if those render distance chunks are inside chunks
     // if not, request them
@@ -113,6 +115,7 @@ void net::reqChunks(net::UDPConn &c, float *plrCoords) {
             c.send(net::get_chunk(cred,reqC));
         }
     }
+    fmt::print("req'd all chunks\n");
 
 }
 
@@ -132,9 +135,14 @@ void net::delChunks(net::UDPConn &c, float *plrCoords) {
 
     // check if existing chunks are in render distance
     std::unique_lock lChunks(*MChunks_ptr);
-    for (auto [coords, chunk] : chunk::chunks){
-        if (renderDistChunks.find(coords) == renderDistChunks.end()) {
-            chunk::chunks.erase(coords);
-        }
-    }
+
+    // if not, add them to a badChunks list
+    std::vector<std::vector<int>> badChunks;
+    for (auto [coords, chunk] : chunk::chunks)
+        if (renderDistChunks.find(coords) == renderDistChunks.end()) // if not in render distance
+            badChunks.push_back(coords);
+
+    // delete all bad chunks
+    for (const auto& bc : badChunks)
+        chunk::chunks.erase(bc);
 }

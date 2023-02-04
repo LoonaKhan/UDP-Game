@@ -53,7 +53,7 @@ namespace chunk {
 
         int* getCoords();
 
-        block::BlockArray getBlocks() const;
+        block::BlockArray getBlocks();
 
         int getBlocksLen();
 
