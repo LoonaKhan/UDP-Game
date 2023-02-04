@@ -9,6 +9,8 @@ namespace glob {
     std::ifstream f("src/client/globvars/globvars.json");
     const json g = json::parse(f);
     const int RENDER_DIST = g["RENDER_DISTANCE"];
+    const int WINDOW_SIZE[] = {g["WINDOW_SIZE"][0], g["WINDOW_SIZE"][1]};
+    const int SCREEN_CENTRE[] = {WINDOW_SIZE[0]/2, WINDOW_SIZE[1]/2};
 
     std::mutex Mposted_plr;
     std::mutex *Mposted_plr_ptr = &Mposted_plr;

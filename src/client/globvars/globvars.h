@@ -11,11 +11,20 @@
 //#include <unique_lock>
 using json = nlohmann::json;
 
+/*
+ * Globvars are global variables used in various other files.
+ *
+ * none of these are meant to act as config variables however.
+ *
+ * todo: move these to their own files?
+ */
 
 namespace glob{
     // our json config
     extern const json g;
     extern const int RENDER_DIST;
+    extern const int WINDOW_SIZE[];
+    extern const int SCREEN_CENTRE[];
 
     // player mutexes. makes sure the player exists before we login
     extern std::mutex Mposted_plr;

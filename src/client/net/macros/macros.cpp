@@ -101,10 +101,8 @@ void net::reqChunks(net::UDPConn &c, float *plrCoords) {
      * if not, request it from the server
      */
 
-    fmt::print("in func\n");
     // determines chunks in render dist
     auto rdChunks = chunk::Chunk::getRenderDistChunks(plrCoords);
-    fmt::print("got all rd chunks\n");
 
     // checks if those render distance chunks are inside chunks
     // if not, request them
@@ -115,7 +113,6 @@ void net::reqChunks(net::UDPConn &c, float *plrCoords) {
             c.send(net::get_chunk(cred,reqC));
         }
     }
-    fmt::print("req'd all chunks\n");
 
 }
 
@@ -128,6 +125,8 @@ void net::delChunks(net::UDPConn &c, float *plrCoords) {
      * Given a set of player coordinates, determine all chunks in render distance
      * for all existing chunks, determine if they are in render distance
      * if not, delete them
+     *
+     * todo: deletes all chunks by accident?
      */
 
     // determines all chunks in render dist

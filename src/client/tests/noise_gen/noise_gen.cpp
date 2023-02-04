@@ -100,13 +100,13 @@ int main() {
 
         float walk_speed = 0.3;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
-            plrCoords[1]+=walk_speed;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
             plrCoords[1]-=walk_speed;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
+            plrCoords[1]+=walk_speed;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
-            plrCoords[0]+=walk_speed;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
             plrCoords[0]-=walk_speed;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
+            plrCoords[0]+=walk_speed;
 
 
         curChunk = chunk::Chunk::toChunkCoords(plrCoords);
@@ -116,14 +116,12 @@ int main() {
             c.send(net::update_pos(cred, int_plr_coords)); // todo: pos updates every movement, not frame
 
             // requires threads to be joined.
-            // todo: try locking these?
-            fmt::print("calling threads\n");
+            // todo: send cond vars when done?
             std::thread ReqChunks(net::reqChunks, std::ref(c), std::ref(plrCoords));
             std::thread DelChunks(net::delChunks, std::ref(c), std::ref(plrCoords));
             ReqChunks.join();
             DelChunks.join();
 
-            fmt::print("called all threads\n");
             prevChunk = curChunk;
         }
         
