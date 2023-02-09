@@ -16,11 +16,12 @@ namespace ptl {
         float speed;
         double x, y; // based off a given angle
         float decay_rate;
+        float force[2];
 
     public: // members
 
     public: // methods
-        Particle(float speed, double angle, float decay_rate, int colour[3], float radius, float pos[2]);
+        Particle(float speed, float force[2], double angle, float decay_rate, int colour[3], float radius, float pos[2]);
 
         void print();
 

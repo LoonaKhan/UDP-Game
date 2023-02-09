@@ -6,8 +6,8 @@
 
 namespace ptl {
 
-    Particle::Particle(float speed, double angle, float decay_rate, int colour[3], float radius, float pos[2])
-    : speed(speed), decay_rate(decay_rate)
+    Particle::Particle(float speed, float force[2], double angle, float decay_rate, int colour[3], float radius, float pos[2])
+    : speed(speed), decay_rate(decay_rate), force{force[0], force[1]}
     {
         resolveAngle(angle);
 
@@ -32,6 +32,8 @@ namespace ptl {
 
         decay(); // delete when rad<0 in our container.
 
+        this->x -= this->force[0];
+        this->y -= this->force[1];
         this->setPosition(curpos.x + this->x, curpos.y + this->y);
         window->draw(*this);
     }
