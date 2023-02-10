@@ -5,28 +5,40 @@
 #include "../particle/Particle.h"
 #include "fmt/core.h"
 #include "cmath"
+#include <effolkronium/random.hpp>
+
+using Random = effolkronium::random_static;
 
 void ParticleInitTest() {
     int colour[] = {3,0,0};
     float pos[] = {0,1};
     float force[] = {0,0.5};
-    auto p = ptl::Particle(0.54, force, 3*M_PI / 2, 0.01, colour, 5, pos);
+    float v[] = {1,5};
+    auto p = ptl::Particle(v, force, 0.01, colour, 5, pos);
     p.print();
 }
 
 void DrawTest() {
-    // create the particle
-    int colour[] = {255,255,255};
-    float pos[] = {960,540};
-    float force[] = {0,-0.1};
-    auto p = ptl::Particle(10, // speed
-                           force,
-                           2*M_PI/3, // direction in radians
-                           0.1, // decay rate
-                           colour,
-                           30, // radius
-                           pos
-                           );
+
+    std::vector<ptl::Particle> particles;
+    int colour[3] = {};
+    float pos[2] = {960, 1080};
+    float force[2] = {};
+    float v[2] = {};
+
+    /*for (int i =0; i<50; i++){// create the particles
+        colour[0] = Random::get(0, 255); colour[1] =  Random::get(0, 255); colour[2] =  Random::get(0, 255);
+        force[0] =  0; force[1] =-0.1;
+        v[0] = float(Random::get(-1.0, 1.0)); v[1]= -15;
+        particles.push_back(ptl::Particle(v, // velocity
+                                     force,
+                                     0.1, // decay rate
+                                     colour,
+                                     15, // radius
+                                     pos
+
+        ));
+    }*/
 
     sf::RenderWindow window(
             sf::VideoMode(1920, 1080),
@@ -42,12 +54,29 @@ void DrawTest() {
                 window.close();
             }
         }
-        p.draw(&window);
+
+        colour[0] = Random::get(0, 255);
+        colour[1] =  255;
+        colour[2] =  Random::get(0, 255);
+        force[0] =  0;
+        force[1] =-0.2;
+        v[0] = float(Random::get(-2.0, 2.0));
+        v[1]= -15;
+        particles.emplace_back(ptl::Particle(v, force, 0.1,colour, 12, pos));
+
+        for (auto i=particles.begin(); i!= particles.end();i++) {
+            if (i->getRadius() <=0)
+                particles.erase(i);
+        }
+        for (auto& p : particles) {
+            p.draw(&window);
+        }
 
 
         window.display();
         window.clear();
         window.setFramerateLimit(60);
+        //std::cout << particles.size() << std::endl;
     }
 }
 

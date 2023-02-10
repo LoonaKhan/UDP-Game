@@ -10,22 +10,24 @@
 #include "fmt/core.h"
 
 namespace ptl {
-    class Particle : sf::CircleShape {
+    class Particle : public sf::CircleShape {
 
     private: // members
-        float speed;
-        double x, y; // based off a given angle
+        double x, y; // x/y velocities
         float decay_rate;
         float force[2];
+        float radius;
 
     public: // members
 
     public: // methods
-        Particle(float speed, float force[2], double angle, float decay_rate, int colour[3], float radius, float pos[2]);
+        Particle(float v[2], float force[2], float decay_rate, int colour[3], float radius, float pos[2]);
 
         void print();
 
         void draw(sf::RenderWindow *window);
+
+        float getRadius();
 
 
     private: // methods
