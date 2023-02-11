@@ -25,7 +25,7 @@ add_executable(test_models models/tests/block_chunk_test.cpp models/block/Block.
 add_executable(noise_gen tests/noise_gen/noise_gen.cpp ${SOURCES})
 #sfml shapes
 add_executable(gui_test tests/sfml-test.cpp ${SOURCES})
-add_executable(particle_test models/tests/particle_test.cpp models/particle/Particle.cpp models/particle/Particle.h)
+add_executable(particle_test models/tests/particle_test.cpp models/particle/Particle.cpp models/particle/Particle.h models/particle/ParticleStream.cpp models/particle/ParticleStream.h)
 
 
 

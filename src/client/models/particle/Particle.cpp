@@ -6,20 +6,17 @@
 
 namespace ptl {
 
-    Particle::Particle(float v[2], float force[2], float decay_rate, int colour[3], float radius, float pos[2])
-    : decay_rate(decay_rate), force{force[0], force[1]}, x(v[0]), y(v[1]), radius(radius)
+    Particle::Particle(std::pair<float, float> force, std::pair<float, float> origin,
+                       sf::Color colour,
+                       float radius, float decay_rate, float x, float y)
+    : decay_rate(decay_rate), force(force), x(x), y(y), radius(radius)
     {
         // CircleShape properties
         this->setRadius(radius);
-        this->setFillColor(sf::Color(colour[0], colour[1], colour[2]));
-        this->setPosition(pos[0], pos[1]);
+        this->setFillColor(colour);
+        this->setPosition(origin.first, origin.second);
         this->setOrigin(radius/2, radius/2);
     }
-
-    /*void Particle::resolveAngle(double angle) {
-        this->x = cos(angle) * this->speed;
-        this->y = -1 * (sin(angle) * this->speed); // positive y is down, negative y is up
-    }*/
 
     void Particle::decay() {
         radius -=decay_rate;
@@ -31,14 +28,33 @@ namespace ptl {
 
         decay(); // delete when rad<0 in our container.
 
-        this->x -= this->force[0];
-        this->y -= this->force[1];
+        //acceleration
+        this->x -= this->force.first;
+        this->y -= this->force.second;
+
+        // movement
         this->setPosition(curpos.x + this->x, curpos.y + this->y);
         window->draw(*this);
     }
 
     float Particle::getRadius() {
         return this->radius;
+    }
+
+    void Particle::setX(float new_x) {
+        this->x = new_x;
+    }
+
+    void Particle::setY(float new_y) {
+        this->y = new_y;
+    }
+
+    float Particle::getX() {
+        return x;
+    }
+
+    float Particle::getY() {
+        return y;
     }
 
     void Particle::print() {
