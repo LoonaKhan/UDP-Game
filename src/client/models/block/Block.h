@@ -14,7 +14,7 @@ using namespace glob;
 
 namespace block {
 
-    class Block : sf::RectangleShape{
+    class Block : public sf::RectangleShape{
     private: // priv attributes
         char coords[2]; // relative to their chunk
         char colour, height;
@@ -23,7 +23,7 @@ namespace block {
         /*
          * if we are recieving data from the server, colour and height will already be filled
          * */
-        Block(char coords[2], char colour=0, char height=0);
+        Block(char coords[2], char colour=128, char height=0);
 
         Block(); // blank constructor so we can make block arrays
 

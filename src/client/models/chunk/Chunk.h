@@ -72,6 +72,8 @@ namespace chunk {
 
         static std::vector<int> toChunkCoords(float* plrCoords);
 
+        static std::pair<std::vector<int>, std::vector<int>> RenderDistCorners(float *plrCoords);
+
     private: // methods
 
     };

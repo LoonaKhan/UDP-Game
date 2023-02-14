@@ -102,6 +102,8 @@ namespace chunk {
         return ret;
     }
 
+
+
     std::vector<int> Chunk::toChunkCoords(float* plrCoords) {
         /*
          * Determines what chunk the player is in.

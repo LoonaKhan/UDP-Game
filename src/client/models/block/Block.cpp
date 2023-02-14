@@ -24,7 +24,7 @@ namespace block {
 
     void Block::render(sf::RenderWindow *window, int *chunk, float *plrCoords) {
         this->setPosition(
-                (((float)chunk[0] * CHUNK_SIZE) + this->coords[0] - plrCoords[0]) * BLOCK_SIZE+ SCREEN_CENTRE[0],
+                (((float)chunk[0] * CHUNK_SIZE) + this->coords[0] - (plrCoords[0])) * BLOCK_SIZE+ SCREEN_CENTRE[0],
                 (((float)chunk[1] * CHUNK_SIZE) + this->coords[1] - plrCoords[1]) * BLOCK_SIZE+ SCREEN_CENTRE[1]
                 );
         window->draw(*this);
